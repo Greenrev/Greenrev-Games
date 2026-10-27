@@ -1,0 +1,346 @@
+--- original/game.js
++++ enhanced/game.js
+@@ -28,7 +28,7 @@
+  {id:'emeka',name:'Emeka Mobile Electrical',skill:'Batteries, alternators and EV inspection',rating:4.7,eta:20,price:17000,emoji:'👨🏾‍🔧',distance:'5.2 km',verified:true}
+ ];
+ const PARTS=[{id:'h4',name:'H4 LED Headlight Kit',fit:'Toyota Corolla 2012 • verified fit',price:22500,rating:4.9,emoji:'💡',seller:'Oga Parts Hub',verified:true},{id:'halogen',name:'H4 Halogen Headlamp',fit:'Toyota Corolla 2012 • verified fit',price:14500,rating:4.7,emoji:'🔦',seller:'Mile 12 Auto Spares',verified:true},{id:'wrong',name:'H7 Xenon Headlight',fit:'Honda Accord • NOT compatible',price:19000,rating:4.3,emoji:'✨',seller:'Express Auto Parts',verified:false}];
+-const DEFAULT=()=>({story:'kano',accident:false,collisionProtection:0,crashes:0,resumeCruise:false,name:'Naija Explorer',avatar:'🧑🏾‍💻',wallet:12000000,points:0,xp:0,km:0,speed:0,lane:1,steerPos:0,camera:'chase',tripElapsedMs:0,startedAt:null,endedAt:null,junctionsCleared:[],health:100,fuel:100,trust:60,autoDrive:false,hasStarted:false,currentEvent:null,done:[],docs:{licence:true,insurance:false,registration:true,roadworthy:false},mechanicId:null,quoteAccepted:false,repairStep:0,mechanicChat:[],restMeal:null,restConvenience:false,restFuel:false,partsPurchased:[],carCompared:false,carBought:null,leadListed:false,leadAnswered:false,leadClosed:false,dealerIncome:0,lastScene:'home',tripComplete:false,incidentHits:0,music:false,vehicleFaults:{},warningLog:[],tyreStep:0,dashStep:0,batteryStep:0,brakeStep:0,weatherStep:0,storyExpansionVersion:4,passportChecked:false,passportSaved:false,rentalChoice:null,rentalChecked:false,rentalFee:0,rentalBags:false,haulageBooked:false,haulageDelivered:false,haulageCommission:0,courierChecked:false,courierDelivered:false,marketplaceFees:0,challengeMistakes:0,powertrain:'petrol',bankLedger:[],financing:null,vehicleUpgrades:[],boostUntil:0,boostReadyAt:0,npcCrashes:0,serviceVisited:[],serviceHistory:[],danfoTrip:false,rideBonuses:0,nightMode:false});
++const DEFAULT=()=>({story:'kano',accident:false,collisionProtection:0,crashes:0,resumeCruise:false,name:'Naija Explorer',avatar:'🧑🏾‍💻',wallet:12000000,points:0,xp:0,km:0,speed:0,lane:1,steerPos:0,camera:'chase',tripElapsedMs:0,startedAt:null,endedAt:null,junctionsCleared:[],health:100,fuel:100,trust:60,autoDrive:false,hasStarted:false,currentEvent:null,done:[],docs:{licence:true,insurance:false,registration:true,roadworthy:false},mechanicId:null,quoteAccepted:false,repairStep:0,mechanicChat:[],restMeal:null,restConvenience:false,restFuel:false,partsPurchased:[],carCompared:false,carBought:null,leadListed:false,leadAnswered:false,leadClosed:false,dealerIncome:0,lastScene:'home',tripComplete:false,incidentHits:0,music:false,vehicleFaults:{},warningLog:[],tyreStep:0,dashStep:0,batteryStep:0,brakeStep:0,weatherStep:0,storyExpansionVersion:4,passportChecked:false,passportSaved:false,rentalChoice:null,rentalChecked:false,rentalFee:0,rentalBags:false,haulageBooked:false,haulageDelivered:false,haulageCommission:0,courierChecked:false,courierDelivered:false,marketplaceFees:0,challengeMistakes:0,powertrain:'petrol',bankLedger:[],financing:null,vehicleUpgrades:[],boostUntil:0,boostReadyAt:0,sceneTimeOffset:0,npcCrashes:0,serviceVisited:[],serviceHistory:[],danfoTrip:false,rideBonuses:0,nightMode:false,creditedRefs:[],lastPaymentMessage:'', trafficPaused:false});
+ const ROUTES={
+  kano:{id:'kano',title:'Abuja → Kano',origin:'ABUJA',destination:'KANO',length:430,
+   places:[{km:0,name:'ABUJA',subtitle:'Departing the Federal Capital Territory'},{km:70,name:'SULEJA',subtitle:'FRSC document stop'},{km:125,name:'KADUNA ROAD',subtitle:'Mechanic rescue'},{km:190,name:'KADUNA',subtitle:'Rest stop, food and convenience'},{km:245,name:'ZARIA',subtitle:'Parts marketplace'},{km:310,name:'ZARIA ROAD',subtitle:'Roadworthiness inspection'},{km:375,name:'KANO OUTSKIRTS',subtitle:'GreenRev car buying'},{km:430,name:'KANO',subtitle:'Destination: Kano'}],
+@@ -58,7 +58,7 @@
+ };
+ const MOBILITY_MISSIONS={
+  service:['Expressway service plaza','⛽','Choose fuel, refreshments, car care and a safe stop'],
+- danfo:['Danfo and highway traffic','🚐','Respond safely to a yellow bus collecting passengers'],
++ danfo:['Public transport encounter','🚐','Respond safely to buses stopping for passengers'],
+  charging:['EV charging & power check','🔌','Charge an EV or prepare a petrol car before arrival']
+ };
+ const EXTRA_MISSIONS={
+@@ -69,7 +69,7 @@
+  seller:['Dealer sales studio','🏪','List a car, reply to a buyer and record a verified deal']
+ };
+ let state=load()||DEFAULT();
+-state.bankLedger ||= [];state.vehicleUpgrades ||= [];state.serviceVisited ||= [];state.serviceHistory ||= [];state.powertrain ||= 'petrol';
++state.creditedRefs ||= [];state.bankLedger ||= [];state.vehicleUpgrades ||= [];state.serviceVisited ||= [];state.serviceHistory ||= [];state.powertrain ||= 'petrol';
+ let activeJunction=null, steerPulse=0, scenicToastAt=-999, welcomeChoice='drive', activeTab='home', currentModal=null, modalDismissible=true, lastTime=0, scrollOffset=0, driveHold={accelerate:false,brake:false,left:false,right:false}, keys=new Set(), traffic=[], particles=[], scenery=[], aiAnswer='',currentToastTimer=null, selectedAvatar=state.avatar, playerWobble=0, canvas=$('game'),engine3D=null;
+ try {engine3D=window.GreenRev3D.create(canvas)} catch(error){
+  const panel=document.createElement('div');panel.className='webgl-error';
+@@ -88,7 +88,7 @@
+  EVENTS.push(...EXTRA_STOPS[cfg.id].map(([id,km])=>({id,km,title:EXTRA_MISSIONS[id][0],icon:EXTRA_MISSIONS[id][1],detail:EXTRA_MISSIONS[id][2]})));
+  EVENTS.push(...ROAD_STOPS[cfg.id].map(([id,km])=>({id,km,title:ROAD_MISSIONS[id][0],icon:ROAD_MISSIONS[id][1],detail:ROAD_MISSIONS[id][2]})));
+  EVENTS.push(...MOBILITY_STOPS[cfg.id].map(([id,km])=>({id,km,title:MOBILITY_MISSIONS[id][0],icon:MOBILITY_MISSIONS[id][1],detail:MOBILITY_MISSIONS[id][2]})));
+- EVENTS.sort((a,b)=>a.km-b.km);
++ EVENTS.sort((a,b)=>a.km-b.km);const busQuest=EVENTS.find(e=>e.id==='danfo');if(busQuest){busQuest.title=cfg.id==='kano'?'Northern intercity bus stop':'Lagos danfo encounter';busQuest.detail=cfg.id==='kano'?'Give room to a white northern-route passenger minibus':'Give way to Lagos yellow danfo loading passengers';}
+ }
+ configureRoute();
+ function eventAt(id){return EVENTS.find(e=>e.id===id)}
+@@ -127,18 +127,56 @@
+  showModal({kicker:'INSUFFICIENT DEMO FUNDS',emoji:'💳',title:'Your in-game wallet is short',description:`You need ${fmt(amount)} but currently have ${fmt(state.wallet)}. Open the fictional wallet or explore car financing. Do not enter real bank details.`,actions:[{text:'Open virtual bank',run:showBank},{text:'Return to offer',style:'subtle',run:back}]});
+ }
+ function payLoan(amount){const f=state.financing;if(!f||f.remaining<=0)return;if(!spend(amount))return;f.remaining=Math.max(0,f.remaining-1);state.bankLedger.unshift({kind:'Fictional monthly car repayment',amount:-amount,at:new Date().toISOString()});save();showBank();}
++function playHorn(){
++ try{const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;const ac=new AC(),osc=ac.createOscillator(),gain=ac.createGain();osc.type='sawtooth';osc.frequency.setValueAtTime(310,ac.currentTime);osc.frequency.linearRampToValueAtTime(265,ac.currentTime+.18);gain.gain.setValueAtTime(.0001,ac.currentTime);gain.gain.exponentialRampToValueAtTime(.13,ac.currentTime+.03);gain.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.24);osc.connect(gain);gain.connect(ac.destination);osc.start();osc.stop(ac.currentTime+.26);osc.onended=()=>ac.close();}catch(_){}
++}
++function cycleTime(){state.sceneTimeOffset=((state.sceneTimeOffset||0)+120)%360;save();const phase=((state.tripElapsedMs||0)/1000+state.sceneTimeOffset)%360;toast('Lighting changed: '+(phase<36||phase>290?'Night':phase>210?'Sunset':'Day')+' mode. 3D time/weather effect.');}
+ function showUpgrades(){showModal({kicker:'GREENREV GARAGE • DRIVING STYLE',emoji:'🏎️',title:'Personalise your ride',description:'Choose cosmetic and driving-game upgrades. Sport mode is only for the game; observe safe speeds in the real world.',content:`<div class="modal-detail">Current car: ${escapeHtml(vehicleSpec().name)}<br>Driving top speed in simulation: ${speedLimit()} km/h<br>Luxury trim: ${state.vehicleUpgrades.includes('luxury')?'Equipped':'Not installed'}<br>Sport pack: ${state.vehicleUpgrades.includes('sport')?'Equipped':'Not installed'}<br><small>No road vehicle is modified in reality.</small></div>`,actions:[
+  {text:'💎 Luxury trim • ₦180,000',run:()=>buyUpgrade('luxury',180000)},
+  {text:'🏁 Sport tuning • ₦350,000',run:()=>buyUpgrade('sport',350000)},
+- {text:'🔊 Try horn (H)',style:'subtle',run:()=>{toast('Peeep! Road safety first.');showUpgrades()}},
++ {text:'🔊 Try horn (H)',style:'subtle',run:()=>{playHorn();toast('Peeep! Road safety first.');showUpgrades()}},
+  {text:'Done',style:'subtle',run:hideModal}]})}
+ function buyUpgrade(kind,cost){if(state.vehicleUpgrades.includes(kind))return showUpgrades();if(!spend(cost))return;state.vehicleUpgrades.push(kind);earn(50,30);save();updateAll();showUpgrades()}
+-function showBank(){phoneTab('bank');showModal({kicker:'GREENREV GAME BANK • NO REAL TRANSACTIONS',emoji:'🏦',title:'Your virtual mobility wallet',description:'Banking here is a local game simulation. No bank account is connected; no real funds, banking credentials or transfers are used.',content:`<div class="modal-detail">Balance: <b>${fmt(state.wallet)}</b><br>${state.financing?`Loan: ${escapeHtml(vehicleSpec().name)} · ${state.financing.remaining} instalments remaining · ${fmt(state.financing.monthly)}/month`:'No active fictional vehicle loan'}<br><small>Credits below are free demo funds for testing higher-priced cars.</small></div>`,actions:[
+- {text:'🎁 Demo ₦5m credit',run:()=>{bankCredit(5000000);showBank()}},
+- {text:'🏦 Demo ₦25m credit',run:()=>{bankCredit(25000000);showBank()}},
+- {text:'💎 Demo ₦100m credit',run:()=>{bankCredit(100000000);showBank()}},
+- ...(state.financing?.remaining>0?[{text:'Pay one demo instalment '+fmt(state.financing.monthly),run:()=>payLoan(state.financing.monthly)}]:[]),
+- {text:'Back to driving',style:'subtle',run:hideModal}]});
++const CHECKOUT_PACKAGES=[{credit:5000000,charge:100},{credit:25000000,charge:250},{credit:100000000,charge:500}];
++function startHostedCheckout(credit){
++ const pack=CHECKOUT_PACKAGES.find(p=>p.credit===credit);
++ if(!pack)return toast('Unknown test package.','warn');
++ showModal({kicker:'PAYSTACK HOSTED CHECKOUT • TEST MODE',emoji:'💳',title:'Connect to the payment provider',description:`The checkout charges ${fmt(pack.charge)} in Paystack TEST MODE and awards ${fmt(pack.credit)} simulation-only game credits after verified success. No real money is taken with test keys.`,
++ content:`<label class="phone-label" for="checkoutEmail">Email for test payment</label><input id="checkoutEmail" type="email" autocomplete="email" placeholder="you@example.com" maxlength="160" value="tester@example.com" /><div class="modal-detail">🔒 Card/bank details are entered ONLY on Paystack's hosted page.<br>Test checkout requires a local Node server and your own <code>sk_test_</code> secret.<br>Never enter live banking details during this prototype test.</div>`,
++ actions:[{text:'↗ Continue to Paystack test checkout',run:async()=>{
++  const email=$('checkoutEmail')?.value.trim();if(!email||!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))return toast('Enter a valid email.','warn');
++  const button=$('modalActions')?.querySelector('button');if(button){button.disabled=true;button.textContent='Connecting to Paystack…'}
++  try{let ready;
++   try{const c=await fetch('/api/config',{cache:'no-store'});ready=await c.json();if(!c.ok||ready.provider!=='Paystack')throw Error('wrong server');}
++   catch(_){throw Error('Payment backend not running: launch START-GAME-WINDOWS.bat or use node server.js (not VS Code Live Server).')}
++   if(!ready.configured)throw Error('Paystack TEST key missing. Copy .env.example to .env, add your sk_test_ key, restart node server.js.');
++   const r=await fetch('/api/payments/initialize',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,credit})});const j=await r.json();if(!r.ok)throw Error(j.error||'Checkout is not configured');
++   if(!/^https:\/\/checkout\.paystack\.com\//.test(j.checkout_url))throw Error('Invalid hosted-checkout URL.');
++   window.location.assign(j.checkout_url);
++  }catch(e){toast(e.message,'warn');if(button){button.disabled=false;button.textContent='↗ Continue to Paystack test checkout'} }
++ }},{text:'Return to virtual wallet',style:'subtle',run:showBank}]});
++}
++async function verifyHostedReturn(){
++ const params=new URLSearchParams(location.search),reference=params.get('reference')||params.get('trxref');
++ if(!reference)return;
++ history.replaceState(null,'',location.pathname+location.hash);
++ if(!/^[A-Za-z0-9._=-]{6,120}$/.test(reference))return toast('Invalid checkout reference.','warn');
++ if(state.creditedRefs.includes(reference)){toast('This test payment has already been applied.');return;}
++ try{const r=await fetch('/api/payments/verify?reference='+encodeURIComponent(reference));const data=await r.json();if(!r.ok||!data.verified)throw Error(data.error||'Payment not confirmed');
++  if(state.creditedRefs.includes(reference))return;
++  state.creditedRefs.push(reference);state.wallet+=data.credit;state.bankLedger.unshift({kind:'Paystack-verified TEST payment',amount:data.credit,at:new Date().toISOString(),reference});
++  save();updateAll();renderPhone();showModal({kicker:'PAYSTACK • TEST PAYMENT VERIFIED',emoji:'✅',title:fmt(data.credit)+' added to game wallet',description:'Your server verified a successful Paystack test transaction, matching the transaction amount and reference. This is not a live-money payment.',actions:[{text:'Open wallet',run:showBank},{text:'Resume game',style:'subtle',run:hideModal}]});
++ }catch(e){showModal({kicker:'CHECKOUT VERIFICATION',emoji:'⚠️',title:'Virtual credits not applied',description:'The server could not verify this Paystack test payment: '+String(e.message),actions:[{text:'Open wallet',run:showBank}]})}
++}
++function showBank(){phoneTab('bank');showModal({kicker:'GREENREV GAME BANK • TEST CHECKOUT',emoji:'🏦',title:'Your mobility game wallet',
++ description:'Choose between FREE developer credits and a proper Paystack-hosted TEST checkout. Both create game-only value, never redeemable for naira.',
++ content:`<div class="modal-detail">Wallet balance: <b>${fmt(state.wallet)}</b><br>${state.financing?`Financed car: ${state.financing.remaining} repayments remaining · ${fmt(state.financing.monthly)} / month`:'No active illustrative car finance'}<br><br>🟢 Developer credits: instant and free<br>🔵 Paystack test checkout: redirects to the provider and requires your <code>sk_test_</code> key on a server<br>🚫 Live payments not enabled in this project</div>`,
++ actions:[{text:'🎁 FREE demo +₦25m',run:()=>{bankCredit(25000000,'Free QA-only game credits');showBank()}},
++ {text:'💳 Paystack TEST +₦5m',run:()=>startHostedCheckout(5000000)},
++ {text:'💳 Paystack TEST +₦25m',run:()=>startHostedCheckout(25000000)},
++ {text:'💳 Paystack TEST +₦100m',run:()=>startHostedCheckout(100000000)},
++ ...(state.financing?.remaining>0?[{text:'Pay demo loan instalment '+fmt(state.financing.monthly),run:()=>payLoan(state.financing.monthly)}]:[]),
++ {text:'Back to game',style:'subtle',run:hideModal}]});
+ }
+ function done(id){return state.done.includes(id)}
+ function nextEvent(){return EVENTS.find(ev=>!done(ev.id))}
+@@ -157,8 +195,8 @@
+  $('btnStories').textContent='🗺️ '+(state.story==='kano'?'Kano Quest':'Lagos → Abuja');if($('serviceQuestMeter'))$('serviceQuestMeter').textContent=EVENTS.filter(e=>EXTRA_MISSIONS[e.id]&&done(e.id)).length+'/5 services';
+  $('tripStatus').textContent=state.accident?'⚠ CRASH • RECOVERY':state.tripComplete?'CHAMPION 🏆':state.currentEvent?'MISSION PAUSED':'ON THE ROAD';
+ $('canvasShell').classList.toggle('resting',state.currentEvent==='rest');const plaza=$('restPlazaMenu');if(plaza){plaza.hidden=state.currentEvent!=='rest';$('restContinue').disabled=!(state.restMeal&&state.restConvenience)}const steering=$('steeringText');if(steering){const pct=Math.round(Math.abs(state.steerPos)*75);steering.textContent=Math.abs(state.steerPos)<.06?'CENTRE':(state.steerPos<0?'LEFT ':'RIGHT ')+pct+'%';$('steeringMarker').style.left=(50+clamp(state.steerPos,-1.2,1.2)*38)+'%'}$('btnCruise').textContent=state.autoDrive?'❚❚ Stop auto-drive':state.accident||state.currentEvent?'▶ Resume story':'▶ Auto-drive';const outstanding=EVENTS.filter(e=>done(e.id)).length;
+- const visibleCars=traffic.filter(t=>t.distance>-25&&t.distance<170).length;const trafficCount=$('trafficCount');if(trafficCount)trafficCount.textContent=visibleCars+' vehicles • '+(state.npcCrashes||0)+' traffic incidents';
+- const alert=$('vehicleWarning');if(alert){const danger=state.currentEvent&&ROAD_MISSIONS[state.currentEvent];alert.hidden=!danger;alert.textContent=danger?ROAD_MISSIONS[state.currentEvent][1]+' '+ROAD_MISSIONS[state.currentEvent][0].toUpperCase():'';}$('questCount').textContent=outstanding+'/'+EVENTS.length;$('questList').innerHTML=EVENTS.map(ev=>`<div class="quest ${done(ev.id)?'done':''} ${nextEvent()?.id===ev.id?'active':''}"><span class="quest-icon">${done(ev.id)?'✓':ev.icon}</span><div><strong>${escapeHtml(ev.title)}</strong><p>${escapeHtml(ev.detail)}</p></div>${nextEvent()?.id===ev.id?'<span class="quest-flag">●</span>':''}</div>`).join('');const current=nextEvent();$('objectiveTitle').textContent=state.currentEvent?current?.title||'Road safety':'Next up: '+(current?.title||'Completed!');$('objectiveText').textContent=state.accident?'Your car needs recovery before you can continue.':state.currentEvent?(current?.detail||'')+' • Click Continue current story event below.':current?`Drive to km ${current.km} or jump to test this scene.`:'Congratulations! All twelve '+routeInfo().title+' missions completed.';$('storyIcon').textContent=current?.icon||'🏆';$('btnOpenRelevant').textContent=state.accident?'Open crash recovery ↗':state.currentEvent?'Continue current mission ↗':'Open phone ↗';$('btnNextScene').disabled=state.tripComplete;$('btnNextScene').textContent=state.accident?'⚠ Crash recovery':state.currentEvent?'▶ Continue current story event':'⚡ Jump to next story event';const relevant={police:'documents',breakdown:'mechanics',parts:'parts',rest:'home',vio:'documents',dealer:'cars',passport:'services',rental:'services',haulage:'services',courier:'services',seller:'dealer',arrival:'home'};$('btnOpenRelevant').dataset.goto=relevant[current?.id]||'home';}
++ const visibleCars=traffic.filter(t=>t.distance>-25&&t.distance<170).length;const buses=traffic.filter(t=>(t.kind==='danfo'||t.kind==='hiace')&&t.distance>-25&&t.distance<170).length;const trafficCount=$('trafficCount');if(trafficCount)trafficCount.textContent=visibleCars+' moving vehicles · '+buses+' buses';
++ const alert=$('vehicleWarning');if(alert){const danger=state.currentEvent&&ROAD_MISSIONS[state.currentEvent];alert.hidden=!danger;alert.textContent=danger?ROAD_MISSIONS[state.currentEvent][1]+' '+ROAD_MISSIONS[state.currentEvent][0].toUpperCase():'';}$('questCount').textContent=outstanding+'/'+EVENTS.length;$('questList').innerHTML=EVENTS.map(ev=>`<div class="quest ${done(ev.id)?'done':''} ${nextEvent()?.id===ev.id?'active':''}"><span class="quest-icon">${done(ev.id)?'✓':ev.icon}</span><div><strong>${escapeHtml(ev.title)}</strong><p>${escapeHtml(ev.detail)}</p></div>${nextEvent()?.id===ev.id?'<span class="quest-flag">●</span>':''}</div>`).join('');const current=nextEvent();$('objectiveTitle').textContent=state.currentEvent?current?.title||'Road safety':'Next up: '+(current?.title||'Completed!');$('objectiveText').textContent=state.accident?'Your car needs recovery before you can continue.':state.currentEvent?(current?.detail||'')+' • Click Continue current story event below.':current?`Drive to km ${current.km} or jump to test this scene.`:'All '+EVENTS.length+' '+routeInfo().title+' missions completed.';$('storyIcon').textContent=current?.icon||'🏆';$('btnOpenRelevant').textContent=state.accident?'Open crash recovery ↗':state.currentEvent?'Continue current mission ↗':'Open phone ↗';$('btnNextScene').disabled=state.tripComplete;$('btnNextScene').textContent=state.accident?'⚠ Crash recovery':state.currentEvent?'▶ Continue current story event':'⚡ Jump to next story event';const relevant={police:'documents',breakdown:'mechanics',parts:'parts',rest:'home',vio:'documents',dealer:'cars',passport:'services',rental:'services',haulage:'services',courier:'services',seller:'dealer',arrival:'home'};$('btnOpenRelevant').dataset.goto=relevant[current?.id]||'home';}
+ function formatDuration(ms){const sec=Math.floor((ms||0)/1000);return [Math.floor(sec/3600),Math.floor(sec/60)%60,sec%60].map(n=>String(n).padStart(2,'0')).join(':')}
+ function localClock(v){return v?new Date(v).toLocaleTimeString('en-NG',{hour:'2-digit',minute:'2-digit',second:'2-digit'}):'—'}
+ function escapeHtml(v){return String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+@@ -206,7 +244,17 @@
+  {text:'🚗 Continue safely (+XP)',run:()=>complete('service','You checked the service plaza and continued safely.',95,70)}]});
+ }
+ function showDanfoEncounter(){
+- state.speed=0;showModal({kicker:'DANFO • NIGERIAN TRAFFIC CULTURE',emoji:'🚐',title:'“Oshodi! Kaduna! Enter with your change!”',description:'A bright-yellow minibus indicates and slows to collect passengers at a marked lay-by. Keke and taxis pass nearby. How will you react?',content:'<div class="modal-detail">🚐 Danfo near the shoulder<br>🧍🏾‍♀️ Passengers waiting at the designated bus stop<br>⚠️ Maintain a safe following gap. Never swerve into pedestrians or opposing traffic.</div>',actions:[{text:'✅ Brake, give way and safely pass',run:()=>{state.danfoTrip=true;earn(80,50);complete('danfo','Safe pass around the danfo. Road respect matters.',110,85)}},{text:'Honk and squeeze through',style:'orange',run:()=>{makeMistake('Dangerous overtaking at a bus stop');state.health=clamp(state.health-12,0,100);showDanfoEncounter()}},{text:'Learn about danfo fleet listings',style:'subtle',run:()=>showModal({kicker:'GREENREV COMMERCIAL VEHICLES',emoji:'🚐',title:'A danfo is also a mobility business',description:'GreenRev could help operators maintain vehicle history, compare spare parts, book repairs, and list buses for sale. Operators could use a dashboard to record mileage, tyre wear and service schedules.',actions:[{text:'Back to the road',run:showDanfoEncounter}]})}]});
++ state.speed=0;
++ const lagos=state.story==='lagos_abuja';
++ const bus=lagos?'yellow Lagos danfo':'white-and-green intercity Hiace bus';
++ showModal({kicker:lagos?'LAGOS • DANFO BUS STOP':'NORTHERN EXPRESSWAY • BUS STOP',emoji:'🚐',
++ title:lagos?'“Oshodi! CMS! Enter with your change!”':'“Kaduna! Zaria! Kano! Seats available!”',
++ description:`A ${bus} pulls safely into a lay-by to pick up passengers. A luggage loader and families wait nearby. How do you react?`,
++ content:`<div class="modal-detail">🚐 Vehicle: <b>${bus}</b><br>📍 Region: <b>${lagos?'Lagos approach':'Abuja–Kaduna–Kano corridor'}</b><br>⚠️ Reduce speed, give way and keep pedestrians safe.</div>`,actions:[
++ {text:'✅ Slow, give way & safely pass',run:()=>{state.danfoTrip=true;earn(80,50);complete('danfo','Safe driving around the passenger bus.',110,85)}},
++ {text:'🔊 Honk and dangerously squeeze through',style:'orange',run:()=>{makeMistake('Unsafe overtaking at a passenger stop');state.health=clamp(state.health-12,0,100);showDanfoEncounter()}},
++ {text:'🧰 Inspect a fleet service record',style:'subtle',run:()=>showModal({kicker:'GREENREV • FLEET PASSPORT',emoji:'📋',title:'A bus is a mobile business',description:'Inspect fictional vehicle mileage, service intervals, tyre condition, driver handover, and spare parts to show how GreenRev could help bus operators.',content:`<div class="modal-detail">Fleet ID: GR-BUS-024<br>Category: ${bus}<br>Servicing: recent<br>Tyres: inspection due soon<br>Next service: 2,800 game km</div>`,actions:[{text:'Return to passenger stop',run:showDanfoEncounter}]})}
++ ]});
+ }
+ function showChargeStop(){
+  const ev=state.powertrain==='electric';state.speed=0;showModal({kicker:'LAST LEG • MOTORWAY ENERGY HUB',emoji:ev?'🔌':'⛽',title:ev?'Charge your EV before the final city approach':'One more stop before the destination',description:ev?'Your electric vehicle needs enough battery for the last section. Choose between a rapid top-up and a longer, less expensive stop.':'You reach a motorway hub with fuel, EV chargers and a coffee lounge. Plan the final leg safely.',content:`<div class="modal-detail">Vehicle: <b>${escapeHtml(vehicleSpec().name)}</b><br>${ev?'Battery':'Fuel'} remaining: <b>${Math.round(state.fuel)}%</b><br>Game duration and prices are fictional.</div>`,actions:[
+@@ -331,7 +379,7 @@
+  {text:'Try a different car',style:'subtle',run:showCarChoices}
+  ]})}
+ function showEnding(){showModal({kicker:'🎊 TRIP COMPLETED • '+routeInfo().destination,emoji:'🏆',title:'You conquered '+routeInfo().title+'!',description:`${state.name}, you made it to ${routeInfo().destination}, checked a vehicle Passport, booked a rental, organised a haulage move, handled parts delivery, solved roadside challenges and managed buyer-and-dealer transactions.`,content:`<div class="modal-detail">🛣️ <b>Distance:</b> ${ROUTE_LENGTH} game km<br>🎮 <b>Game score:</b> ${state.xp} XP<br>💎 <b>GreenPoints:</b> ${state.points}<br>⭐ <b>Trust score:</b> ${state.trust}/100<br>🚗 <b>Your ride:</b> ${escapeHtml(state.carBought?CARS.find(c=>c.id===state.carBought).name:'Toyota Corolla')}<br>⏱️ <b>Total journey time:</b> ${formatDuration(state.tripElapsedMs)}<br>🟢 <b>Departed:</b> ${localClock(state.startedAt)}<br>🏁 <b>Arrived:</b> ${localClock(state.endedAt)}<br>🏦 <b>Fictional financed car:</b> ${state.financing?'Yes · '+state.financing.remaining+' repayments remain':'No'}<br>🚐 <b>NPC traffic incidents:</b> ${state.npcCrashes||0}<br>⛽ <b>Service visits:</b> ${(state.serviceHistory||[]).length}<br>🚚 <b>Demo haulage fees:</b> ${fmt(state.haulageCommission||0)}<br>📦 <b>Demo marketplace fees:</b> ${fmt(state.marketplaceFees||0)}<br>🏪 <b>Dealer platform fees:</b> ${fmt(state.dealerIncome||0)}<br>🧩 <b>Choices to improve:</b> ${state.challengeMistakes||0}<br><br>Replay to unlock more achievements and improve your trust score.</div>`,actions:[{text:'Try Dealer Studio',run:()=>{hideModal();phoneTab('dealer')}},{text:'Play the other route',style:'subtle',run:()=>switchStory(state.story==='kano'?'lagos_abuja':'kano')},{text:'Replay this route',style:'subtle',run:resetGame}]})}
+-function resetGame(){activeJunction=null;welcomeChoice='drive';const story=state.story;state=DEFAULT();state.story=story;configureRoute();selectedAvatar=state.avatar;activeTab='home';aiAnswer='';traffic=[];particles=[];hideModal();save();updateAll();renderPhone();welcome()}
++function resetGame(){activeJunction=null;welcomeChoice='drive';const story=state.story;state=DEFAULT();state.story=story;configureRoute();selectedAvatar=state.avatar;activeTab='home';aiAnswer='';traffic=[];particles=[];makeTraffic();hideModal();save();updateAll();renderPhone();welcome()}
+ function switchStory(id){if(!ROUTES[id])return;state=DEFAULT();state.story=id;configureRoute();selectedAvatar=state.avatar;welcomeChoice='drive';activeJunction=null;traffic=[];makeTraffic();hideModal();save();updateAll();renderPhone();welcome()}
+ function chooseStory(){showModal({kicker:'CHOOSE AN ADVENTURE',emoji:'🗺️',title:'Two Nigerian mobility adventures',description:'Choose a route. Selecting another story starts a fresh adventure and replaces this browser saved progress; your original code files are unchanged.',content:'<div class="modal-detail"><b>1 • Abuja → Kano</b><br>Suleja, Kaduna, Zaria, Kano · 430 game km · 20 missions<br><br><b>2 • Lagos → Abuja</b><br>Ibadan, Akure, Lokoja, Abuja · 550 game km · 20 missions</div>',actions:[{text:'🚗 Abuja → Kano',run:()=>switchStory('kano')},{text:'🚙 Lagos → Abuja',run:()=>switchStory('lagos_abuja')},{text:'Keep playing',style:'subtle',run:hideModal}]})}
+ /* Interactive welcome mission shortcuts are demo entry points, not dead labels.
+@@ -346,7 +394,7 @@
+ ];
+ function startWelcomeJourney(){
+  const n=$('driverName');state.name=(n?.value||'Naija Explorer').trim().slice(0,24)||'Naija Explorer';state.avatar=selectedAvatar;
+- configureRoute();state.hasStarted=true;state.startedAt=new Date().toISOString();state.tripElapsedMs=0;state.endedAt=null;state.speed=0;state.steerPos=0;
++ configureRoute();state.hasStarted=true;state.startedAt=new Date().toISOString();state.tripElapsedMs=0;state.endedAt=null;state.speed=0;state.steerPos=0;makeTraffic();
+  const selected=welcomeChoice;
+  const target={roadblocks:'police',mechanics:'breakdown',cars:'dealer'}[selected];
+  if(target){const idx=EVENTS.findIndex(e=>e.id===target);state.done=EVENTS.slice(0,idx).map(e=>e.id);state.km=EVENTS[idx].km;}
+@@ -404,12 +452,14 @@
+ $('btnCruise').onclick=()=>{if(!state.hasStarted)return welcome();if(state.accident||state.currentEvent){state.resumeCruise=true;return resumeEvent()}state.autoDrive=!state.autoDrive;updateAll();toast(state.autoDrive?'Auto-drive enabled. The car will follow the highway.':'Auto-drive paused.')};
+ $('btnBank').onclick=showBank;
+ $('btnGarage').onclick=showUpgrades;
++$('btnHorn').onclick=playHorn;
++$('btnTime').onclick=cycleTime;
+ $('btnBoost').onclick=()=>{if(!state.hasStarted||state.currentEvent||state.accident)return toast('Start driving before boosting.','warn');if(state.tripElapsedMs<(state.boostReadyAt||0))return toast('Sport boost cooling down.','warn');state.boostUntil=state.tripElapsedMs+5000;state.boostReadyAt=state.tripElapsedMs+25000;toast('SPORT BOOST! Use only in the game and keep clear of traffic.');};
+ $('btnNextScene').onclick=()=>{if(!state.hasStarted)return welcome();if(state.accident||state.currentEvent)return resumeEvent();const n=nextEvent();if(!n||state.tripComplete)return;state.km=n.km;state.speed=0;state.autoDrive=false;openEvent(n.id);updateAll()};
+ /* Real steering: keyboard + touch/mouse controls. No focus on canvas required. */
+ const steer=(direction,amount=.32)=>{if(!state.hasStarted||state.tripComplete||state.currentEvent||!$('modalLayer').hidden)return;state.steerPos=clamp(state.steerPos+direction*amount,-1.17,1.17);state.lane=clamp(Math.round(state.steerPos+1),0,2);steerPulse=direction};
+ const isTextTarget=()=>['INPUT','TEXTAREA','SELECT'].includes(document.activeElement?.tagName)&&document.activeElement?.getClientRects().length>0;
+-window.addEventListener('keydown',e=>{if(isTextTarget())return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(activeJunction&&(k==='arrowleft'||k==='arrowright')){e.preventDefault();chooseJunctionExit(k==='arrowright');return}if(['1','2','3','4'].includes(k)&&!e.repeat)changeCamera(['map','chase','driver','far'][Number(k)-1]);if(!keys.has(k)){if(k==='arrowleft'||k==='a')steer(-1,.37);if(k==='arrowright'||k==='d')steer(1,.37);if(k==='arrowup'||k==='w')state.speed=clamp(state.speed+7,0,speedLimit());if(k==='h'&&!e.repeat)toast('Peeeeep! Give danfos and pedestrians space!')}keys.add(k)});
++window.addEventListener('keydown',e=>{if(isTextTarget())return;const k=e.key.toLowerCase();if(['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k))e.preventDefault();if(activeJunction&&(k==='arrowleft'||k==='arrowright')){e.preventDefault();chooseJunctionExit(k==='arrowright');return}if(['1','2','3','4'].includes(k)&&!e.repeat)changeCamera(['map','chase','driver','far'][Number(k)-1]);if(!keys.has(k)){if(k==='arrowleft'||k==='a')steer(-1,.37);if(k==='arrowright'||k==='d')steer(1,.37);if(k==='arrowup'||k==='w')state.speed=clamp(state.speed+7,0,speedLimit());if(k==='h'&&!e.repeat)playHorn()}keys.add(k)});
+ window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));
+ window.addEventListener('blur',()=>{keys.clear();Object.keys(driveHold).forEach(k=>driveHold[k]=false)});
+ document.querySelectorAll('[data-drive]').forEach(b=>{const k=b.dataset.drive;
+@@ -427,16 +477,22 @@
+ /* Real-time WebGL scene. The underlying shop, mechanic, FRSC, VIO,
+  * economy, and dealer missions remain the original GreenRev game logic. */
+ function drawGame(dt){if(engine3D)engine3D.render(state,dt,traffic)}
++function routeBusKind(){return state.story==='lagos_abuja'?'danfo':'hiace'}
+ function makeTraffic(){
+- // 12 visual 3D road users at known distances, including the nearest overtaking vehicles.
+- // Keep the same relative-distance units in WebGL drawing and collision calculations.
+- traffic=[];const lanes=[1,0,2,2,0,1,0,2,1,2,0,1];
+- for(let i=0;i<lanes.length;i++)traffic.push({id:i,lane:lanes[i],distance:18+i*12.5,speed:35+(i*13)%48,kind:i%5===0?'danfo':i%7===0?'suv':'car',color:['#efb947','#f4f4e5','#e9a6a0','#69bfd0','#8ddaa0'][i%5]});
++ // Stable, visible population; recreate on reset/start and new storyline.
++ traffic=[];
++ for(let i=0;i<21;i++){
++  const bus=i%5===1;
++  traffic.push({id:i,lane:i%3,distance:18+i*7.7,speed:42+(i*11)%46,
++   kind:bus?routeBusKind():(i%6===0?'suv':'car'),
++   color:['#f1f2e9','#d8a294','#54a6c0','#99bd92','#ddd7bd','#b9a7c8'][i%6],incidentTimer:0});
++ }
+ }
+ function respawnTraffic(t,base=105){
+- // Cars loop back to the horizon after being passed. One respawn is never placed on top of the player.
+  const furthest=Math.max(base,...traffic.filter(x=>x!==t).map(x=>x.distance));
+- t.distance=Math.max(45,furthest)+16+random(0,20);t.lane=Math.floor(random(0,3));t.speed=random(28,83);t.incidentTimer=0;t.kind=(Math.random()<.25?'danfo':Math.random()<.3?'suv':'car');
++ t.distance=Math.min(194,Math.max(38,furthest)+13+random(0,15));
++ t.lane=Math.floor(random(0,3));t.speed=random(37,88);t.incidentTimer=0;
++ t.kind=Math.random()<.27?routeBusKind():Math.random()<.22?'suv':'car';
+ }
+ function nearestTraffic(){return traffic.filter(t=>t.distance>=0).sort((a,b)=>a.distance-b.distance)[0]||null}
+ 
+@@ -454,15 +510,17 @@
+  state.collisionProtection=Math.max(0,(state.collisionProtection||0)-dt);
+  const playerX=state.steerPos*4.1;
+  for(const t of traffic){
++  const leader=traffic.filter(o=>o!==t&&o.lane===t.lane&&o.distance>t.distance&&o.distance<t.distance+17&&o.incidentTimer<=0).sort((a,b)=>a.distance-b.distance)[0];
++  if(leader)t.speed=Math.min(t.speed,Math.max(0,leader.speed-2));
+   const previous=t.distance;
+   if(t.incidentTimer>0){t.speed=0;}
+   // Real relative movement in scene units per game second. Traffic still flows while the player is parked.
+   t.distance+=(t.speed-(canHit?state.speed:0))/3.6*dt*1.3;
+-  if(t.distance>185){respawnTraffic(t,100);continue}
++  if(t.distance>202){respawnTraffic(t,112);continue}
+   if(t.distance< -38){respawnTraffic(t,95);continue}
+   if(!canHit||state.accident||state.currentEvent||state.collisionProtection>0)continue;
+-  const nearX=Math.abs(playerX-(t.lane-1)*4.1)<2.25;
+-  const longOverlap=Math.min(previous,t.distance)<=4.4&&Math.max(previous,t.distance)>=-4.4;
++  const nearX=Math.abs(playerX-(t.lane-1)*4.1)<(t.kind==='hiace'||t.kind==='danfo'?2.6:2.32);
++  const longOverlap=Math.min(previous,t.distance)<=5.6&&Math.max(previous,t.distance)>=-5.6;
+   if(nearX&&longOverlap&&state.speed>9){crashWithTraffic(t);break}
+  }
+ }
+@@ -514,6 +572,6 @@
+  if(autosaveTime>3){save();autosaveTime=0}
+  requestAnimationFrame(frame)
+ }
+-function init(){changeCamera(state.camera||'chase');makeTraffic();updateAll();renderPhone();if(state.hasStarted){toast('Welcome back, '+state.name+'! Your saved route is here. Replay from Reset to explore earlier new missions.');if(state.accident){setTimeout(showCrashRecovery,450)}else if(state.currentEvent){const ev=state.currentEvent;setTimeout(()=>openEvent(ev),400)}else if(state.tripComplete){setTimeout(showEnding,500)}}else setTimeout(welcome,350);requestAnimationFrame(frame)}
++function init(){changeCamera(state.camera||'chase');makeTraffic();updateAll();renderPhone();if(state.hasStarted){toast('Welcome back, '+state.name+'! Your saved route is here. Replay from Reset to explore earlier new missions.');if(state.accident){setTimeout(showCrashRecovery,450)}else if(state.currentEvent){const ev=state.currentEvent;setTimeout(()=>openEvent(ev),400)}else if(state.tripComplete){setTimeout(showEnding,500)}}else setTimeout(welcome,350);requestAnimationFrame(frame);if(new URLSearchParams(location.search).has('reference')||new URLSearchParams(location.search).has('trxref'))setTimeout(verifyHostedReturn,850)}
+ init();
+ })();
+--- original/world3d.js
++++ enhanced/world3d.js
+@@ -94,6 +94,8 @@
+  }
+  B(0,.48,-2.38,1.58,.14,.05,'#87979a');B(0,.48,2.4,1.48,.14,.05,'#8eaaaa');
+  B(-.70,.73,-2.38,.20,.12,.03,'#ffffff');B(.70,.73,-2.38,.20,.12,.03,'#ffffff');
++ // Luxury trim details: sunroof, black roof rails and rear diffuser
++ if(player){B(0,1.852,.17,.73,.035,1.00,'#182a30');B(-.66,1.84,.20,.08,.08,1.49,'#ced9cc');B(.66,1.84,.20,.08,.08,1.49,'#ced9cc');B(0,.48,2.42,1.25,.10,.06,'#30343a');}
+  // seated avatar glimpsed behind the windscreen
+  if(player){this.sphere(...P(-.32,1.31,.13),.35,.34,.35,'#a76d47');this.sphere(...P(-.32,1.52,.10),.36,.24,.36,'#1e2428');}
+  }
+@@ -124,6 +126,33 @@
+   B(0,2.49,-2.57,1.65,.30,.13,'#174f38');
+   B(-.93,2.77,.15,.16,.19,4.2,'#777a69');B(.93,2.77,.15,.16,.19,4.2,'#777a69');
+   if(damaged){for(let k=0;k<3;k++)this.sphere(...P(-1.3+k*.4,2.7,-.7-k*.3),.42,.33,.35,'#ad8876')}
++ }
++ hiace(x,y,z,yaw=0,damaged=false){
++  // Northern Nigerian intercity minibus: high roof, front grille, large windows,
++  // luggage compartment and an optional route sign. Distinct from Lagos danfo.
++  const cc=Math.cos(yaw),ss=Math.sin(yaw),P=(dx,dy,dz)=>[x+cc*dx+ss*dz,y+dy,z-ss*dx+cc*dz];
++  const B=(dx,dy,dz,w,h,d,c)=>this.box(...P(dx,dy,dz),w,h,d,c,yaw);
++  const C=(dx,dy,dz,w,h,d,c,rx=0)=>this.drawMesh('cylinder',P(dx,dy,dz),[w,h,d],c,yaw,rx);
++  B(0,.68,.15,2.25,1.12,5.75,'#ecf0e9');B(0,1.79,.25,2.21,1.37,5.10,'#e7eae4');
++  B(0,2.52,.23,2.30,.15,5.40,'#ecf0ec');
++  B(0,1.53,-2.68,1.82,1.13,.11,'#567e8b');B(0,1.52,2.78,1.84,.99,.10,'#517780');
++  B(0,.62,-2.91,2.12,.38,.2,'#2c3337');B(0,.68,2.94,2.05,.34,.2,'#303b42');
++  B(0,.87,-2.99,1.25,.40,.08,'#263f44');
++  for(const side of [-1,1]){
++   for(let i=0;i<4;i++)B(side*1.15,1.86,-1.60+i*1.08,.08,.72,.79,'#608790');
++   B(side*1.16,.92,.02,.08,.21,5,'#1b855d');
++   B(side*1.18,.65,.02,.09,.13,4.6,'#257e61');
++   B(side*1.18,1.28,1.08,.08,.12,1.25,'#6c8290');
++   B(side*1.21,1.31,1.17,.10,.08,.37,'#b9bbb6');
++   for(const zz of [-1.8,1.84]){C(side*1.13,.49,zz,.86,.33,.86,'#181e21',Math.PI/2);C(side*1.34,.49,zz,.37,.35,.37,'#cbd0d0',Math.PI/2)}
++  }
++  for(const side of [-.80,.80]){
++   B(side,.92,-2.95,.38,.25,.09,damaged?'#ff7a4a':'#fff6de');
++   B(side,.95,2.96,.36,.24,.09,'#d84433');
++  }
++  B(0,2.35,-2.74,1.48,.25,.12,'#1b7d55');
++  B(0,2.66,.24,1.32,.10,3.20,'#b4c3bd');
++  if(damaged){this.sphere(...P(.94,2.65,-1.3),.37,.37,.37,'#a66b56')}
+  }
+  suv(x,y,z,hex='#ccd9c2',yaw=0,player=false){
+   // Taller body with curved sedan foundation, proper roof, door pillars and spare tyre.
+@@ -170,7 +199,7 @@
+   if(feature.kind==='police'||feature.kind==='vio')this.checkpoint(x,z,feature.kind==='vio');
+   if(feature.kind==='rest')this.restStop(x+26,z);
+   if(feature.kind==='service'||feature.kind==='charging'){this.fuelStation(x+24,z);this.sign(x+22,z-11,[feature.kind==='charging'?'EV CHARGING':'GREENREV STOP','FOOD + FUEL'])}
+-  if(feature.kind==='danfo'){this.danfo(x+13,elevation(at),z,1.52,false);this.person(x+16,z-3,1);this.sign(x+18,z-13,['DANFO STOP','SLOW DOWN'])}
++  if(feature.kind==='danfo'){if(south){this.danfo(x+13,elevation(at),z,1.52,false);this.sign(x+18,z-13,['LAGOS DANFO','GIVE WAY'])}else{this.hiace(x+13,elevation(at),z,1.52,false);this.sign(x+18,z-13,['INTERCITY BUS','KADUNA - KANO'])}this.person(x+16,z-3,1)}
+   if(feature.kind==='breakdown'){this.car(x+11,elevation(at),z,'#e9d19a',1.48,false);this.person(x+15,z,0);this.sign(x+10,z-19,['MECHANIC','GREENREV APP'])}
+   if(feature.kind==='parts')this.sign(x+12,z-12,['AUTO PARTS','NEXT EXIT']);
+   if(feature.kind==='tyre'){this.sign(x+12,z-8,['TYRE SERVICE','GREENREV']);this.car(x+17,elevation(at),z+12,'#c9d9f0',1.57)}
+@@ -193,6 +222,7 @@
+   const lane=(t.lane-1)*4.1,x=center(worldS)+lane,y=elevation(worldS),z=-worldS,yaw=Math.atan(slope(worldS));
+   const c=t.color||['#efc245','#e9e9e0','#b1c9df','#db796b','#87ab9d'][i%5];
+   if(t.kind==='danfo')this.danfo(x,y,z,yaw,t.incidentTimer>0);
++  else if(t.kind==='hiace')this.hiace(x,y,z,yaw,t.incidentTimer>0);
+   else if(t.kind==='suv')this.suv(x,y,z,c,yaw);
+   else this.car(x,y,z,c,yaw);
+   if(t.incidentTimer>0&&Math.floor(this.frameNo/14)%2===0){
+@@ -209,7 +239,7 @@
+  else {eye=[center(s)+state.steerPos*.85,4.75+elevation(s),-s+11.4];target=[center(s+24),1.2+elevation(s+24),-s-34];fov=.94}
+  this.gl.uniform3fv(this.uCam,new Float32Array(eye));const vw=M.lookAt(eye,target),p=M.perspective(fov,this.canvas.width/this.canvas.height,.15,400);this.gl.uniformMatrix4fv(this.uVP,false,M.mul(p,vw));return {carx,roadYaw,mode}
+  }
+- render(state,dt,traffic){const gl=this.gl;let cw=this.canvas.clientWidth||960,ch=this.canvas.clientHeight||560,dpr=Math.min(window.devicePixelRatio||1,1.5),w=Math.round(cw*dpr),h=Math.round(ch*dpr);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h}gl.viewport(0,0,w,h);const phase=((state.tripElapsedMs||0)/1000)%360/360;const dusk=phase>.55&&phase<.81;const night=phase>=.81||phase<.10;
++ render(state,dt,traffic){const gl=this.gl;let cw=this.canvas.clientWidth||960,ch=this.canvas.clientHeight||560,dpr=Math.min(window.devicePixelRatio||1,1.5),w=Math.round(cw*dpr),h=Math.round(ch*dpr);if(this.canvas.width!==w||this.canvas.height!==h){this.canvas.width=w;this.canvas.height=h}gl.viewport(0,0,w,h);const phase=(((state.tripElapsedMs||0)/1000+(state.sceneTimeOffset||0))%360)/360;const dusk=phase>.55&&phase<.81;const night=phase>=.81||phase<.10;
+  const sky=night?[.080,.125,.22]:dusk?[.74,.47,.38]:[.53,.75,.83];
+  gl.clearColor(...sky,1);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);gl.useProgram(this.program);
+  gl.uniform3fv(this.uFog,night?new Float32Array([.16,.24,.30]):dusk?new Float32Array([.78,.55,.42]):color('#88bbc8'));const s=(state.km||0)*8;const camera=this.camera(state,s,dt);
+--- original/index.html
++++ enhanced/index.html
+@@ -11,7 +11,7 @@
+ <body>
+   <div class="app-shell">
+     <header class="header">
+-      <div class="brand"><div class="brand-mark"><span>G</span><i></i></div><div><strong>green<span>rev</span></strong><small>ROADTRIP 3D <b>•</b> KANO QUEST</small></div></div>
++      <div class="brand"><div class="brand-mark"><span>G</span><i></i></div><div><strong>green<span>rev</span></strong><small>ROADTRIP 3D <b>•</b> NIGERIAN MOBILITY WORLD</small></div></div>
+       <div class="top-route"><span class="route-dot"></span> <span id="routeTopOrigin">ABUJA</span> <span class="route-line"></span> <span id="routeTopDestination">KANO</span> <span class="live-pill"><span></span> STORY MODE</span></div>
+       <div class="top-actions"><button class="button ghost compact" id="btnStories">🗺️ Kano Quest</button><button class="icon-button" id="btnHelp" title="How to play">?</button><button class="button ghost compact" id="btnReset">↻ Reset</button></div>
+     </header>
+@@ -19,7 +19,7 @@
+       <aside class="left-rail">
+         <div class="profile card-panel"><div class="profile-top"><span id="avatarEmoji">🧑🏾‍💻</span><div><small>YOUR DRIVER</small><strong id="profileName">Naija Explorer</strong><span class="micro-label">LEVEL <b id="levelText">1</b> • ROAD ROOKIE</span></div></div><div class="xp-track"><div id="xpFill"></div></div><div class="xp-label"><span id="xpText">0 XP</span><span>Next level: 100 XP</span></div></div>
+         <div class="card-panel balance-panel"><span class="eyebrow">YOUR GAME WALLET</span><strong id="walletText">₦12,000,000</strong><div class="wallet-sub"><span>◈ GreenPoints</span><b id="pointsText">0</b></div><p>Simulation credits only. No real money.</p></div>
+-        <div class="sidebar-heading">YOUR ADVENTURE <span id="questCount">0/17</span></div>
++        <div class="sidebar-heading">YOUR ADVENTURE <span id="questCount">0/20</span></div>
+         <div class="quest-list" id="questList"></div><div class="service-quest-stat"><span>✦ GREENREV EXPERIENCES</span><strong id="serviceQuestMeter">0/5 services</strong></div>
+         <div class="tip-panel"><div>💡 <b>Founder tip</b></div><p>Every roadside challenge introduces a real GreenRev product journey — discover, trust, transact, and repeat.</p></div>
+       </aside>
+@@ -35,7 +35,7 @@
+             <div class="view-controls" aria-label="Camera views"><span>CAMERA</span><button type="button" data-view="map" title="Top-down view (key 1)">🚁 Aerial</button><button type="button" data-view="chase" title="Third-person chase view (key 2)">🚘 Follow</button><button type="button" data-view="driver" title="First-person driver's-eye view (key 3)">👀 Cockpit</button><button type="button" data-view="far" title="Far aerial view (key 4)">🛰️ Far</button></div>
+             <div class="trip-clock"><span>⏱ JOURNEY TIME</span><strong id="elapsedText">00:00:00</strong><small id="timeStatus">READY TO DEPART</small></div>
+             <div class="npc-bubble" id="npcBubble"><span id="npcAvatar">🧑🏾‍💻</span><div><strong id="npcName">NAIJA EXPLORER</strong><small id="npcSpeech">Ready for the adventure?</small></div></div>
+-            <div class="traffic-status" aria-live="off">🚘 LIVE TRAFFIC <strong id="trafficCount">12 vehicles</strong></div><div class="vehicle-warning" id="vehicleWarning" hidden>⚠ VEHICLE ALERT</div>
++            <div class="traffic-status" aria-live="off">🚘 LIVE TRAFFIC <strong id="trafficCount">21 vehicles</strong></div><div class="vehicle-warning" id="vehicleWarning" hidden>⚠ VEHICLE ALERT</div>
+             <div class="steering-hud" aria-live="off"><span>STEERING <strong id="steeringText">CENTRE</strong></span><div class="steering-track"><i id="steeringMarker"></i></div></div>
+              <div class="rest-plaza-menu" id="restPlazaMenu" hidden aria-label="Rest stop actions"><button type="button" data-rest="food">🍲 Order food</button><button type="button" data-rest="wc">🚻 Convenience</button><button type="button" data-rest="fuel">⛽ Refuel</button><button type="button" id="restContinue" data-rest="continue" disabled>🚗 Continue</button></div>
+              <div class="speedo"><strong id="speedText">0</strong><small>KM/H</small></div>
+@@ -43,7 +43,7 @@
+             <div class="toast-stack" id="toasts" aria-live="polite"></div>
+             <div class="mobile-drive" aria-label="On-screen driving controller"><button type="button" data-drive="left" aria-label="Steer left">◀ LEFT</button><button type="button" data-drive="brake" aria-label="Brake">▼ BRAKE</button><button type="button" data-drive="accelerate" class="gas" aria-label="Accelerate">▲ GAS</button><button type="button" data-drive="right" aria-label="Steer right">RIGHT ▶</button></div>
+           </div>
+-          <div class="driving-bottom"><div class="control-hint"><span>W / ↑</span> Gas <span>A / ←</span> Left <span>D / →</span> Right <span>S / ↓</span> Brake <span>1–4</span> Camera</div><div class="drive-buttons"><button class="button subtle" id="btnBoost">⚡ Boost</button><button class="button subtle" id="btnGarage">🚘 Garage</button><button class="button subtle" id="btnBank">🏦 Game Bank</button><button class="button subtle" id="btnCruise">▶ Auto-drive</button><button class="button accent" id="btnNextScene">⚡ Jump to next story event</button></div></div>
++          <div class="driving-bottom"><div class="control-hint"><span>W / ↑</span> Gas <span>A / ←</span> Left <span>D / →</span> Right <span>S / ↓</span> Brake <span>1–4</span> Camera</div><div class="drive-buttons"><button class="button subtle" id="btnHorn">🔊 Horn</button><button class="button subtle" id="btnTime">🌤️ Time & light</button><button class="button subtle" id="btnBoost">⚡ Boost</button><button class="button subtle" id="btnGarage">🚘 Garage</button><button class="button subtle" id="btnBank">🏦 Game Bank</button><button class="button subtle" id="btnCruise">▶ Auto-drive</button><button class="button accent" id="btnNextScene">⚡ Jump to next story event</button></div></div>
+         </section>
+         <section class="story-strip"><div class="story-icon" id="storyIcon">🧭</div><div><small>CURRENT OBJECTIVE</small><strong id="objectiveTitle">Hit the road!</strong><p id="objectiveText">Accelerate or use Auto-drive to experience the route.</p></div><button id="btnOpenRelevant" class="button subtle">Open phone ↗</button></section>
+         <section class="bottom-stats"><div><span>YOUR RIDE</span><strong id="carName">Toyota Corolla • 2012</strong></div><div><span>TRUST SCORE</span><strong id="trustText">60 / 100</strong></div><div><span>TRIP STATUS</span><strong id="tripStatus">ROAD READY</strong></div></section>
+@@ -53,10 +53,10 @@
+           <div class="phone-tabs" role="tablist"><button data-tab="home" class="active">Home</button><button data-tab="mechanics">Mechanics</button><button data-tab="parts">Parts</button><button data-tab="cars">Cars + AI</button><button data-tab="documents">Papers</button><button data-tab="dealer">Dealer</button><button data-tab="services">🚚 Services</button><button data-tab="bank">🏦 Wallet</button></div>
+           <div class="phone-body" id="phoneBody"></div><div class="phone-bottom"><div></div></div>
+         </div>
+-        <div class="mini-disclaimer"><span>✦</span> All locations, profiles, inventory, checks and payments are fictional demonstrations. No live GreenRev integration.</div>
++        <div class="mini-disclaimer"><span>✦</span> Fictional game data. Hosted payments use Paystack TEST mode only when configured; no real money or live GreenRev service integration.</div>
+       </aside>
+     </div>
+-    <footer class="footer"><span>GREENREV ROADTRIP · INTERACTIVE PRODUCT DEMO</span><span>Built to explore the future of automotive mobility in Northern Nigeria</span><span>TRUE WEBGL 3D • 2 STORIES • COLLISION RECOVERY</span></footer>
++    <footer class="footer"><span>GREENREV ROADTRIP · INTERACTIVE PRODUCT DEMO</span><span>Nigerian mobility: Abuja • Kaduna • Kano | Lagos • Ibadan • Abuja</span><span>TRUE 3D WEBGL • DAY/NIGHT EFFECTS • TEST PAYMENTS</span></footer>
+   </div>
+   <div class="modal-layer" id="modalLayer" hidden><div class="modal-backdrop"></div><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="close-modal" id="modalClose" aria-label="Close dialog">×</button><div class="modal-kicker" id="modalKicker">NEW MISSION</div><div class="modal-emoji" id="modalEmoji">🚙</div><h2 id="modalTitle">Title</h2><p id="modalDescription"></p><div id="modalContent"></div><div id="modalActions" class="modal-actions"></div></section></div>
+   <script src="world3d.js"></script>

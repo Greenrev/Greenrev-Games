@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#081e19" />
+  <meta name="description" content="GreenRev Roadtrip — an interactive Nigerian road-trip, mobility and marketplace simulation." />
+  <title>GreenRev ROADTRIP | The Naija Drive</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <header class="header">
+      <div class="brand"><div class="brand-mark"><span>G</span><i></i></div><div><strong>green<span>rev</span></strong><small>ROADTRIP 3D <b>•</b> NIGERIAN MOBILITY WORLD</small></div></div>
+      <div class="top-route"><span class="route-dot"></span> <span id="routeTopOrigin">ABUJA</span> <span class="route-line"></span> <span id="routeTopDestination">KANO</span> <span class="live-pill"><span></span> STORY MODE</span></div>
+      <div class="top-actions"><button class="button ghost compact" id="btnStories">🗺️ Kano Quest</button><button class="icon-button" id="btnHelp" title="How to play">?</button><button class="button ghost compact" id="btnReset">↻ Reset</button></div>
+    </header>
+    <div class="dashboard">
+      <aside class="left-rail">
+        <div class="profile card-panel"><div class="profile-top"><span id="avatarEmoji">🧑🏾‍💻</span><div><small>YOUR DRIVER</small><strong id="profileName">Naija Explorer</strong><span class="micro-label">LEVEL <b id="levelText">1</b> • ROAD ROOKIE</span></div></div><div class="xp-track"><div id="xpFill"></div></div><div class="xp-label"><span id="xpText">0 XP</span><span>Next level: 100 XP</span></div></div>
+        <div class="card-panel balance-panel"><span class="eyebrow">YOUR GAME WALLET</span><strong id="walletText">₦12,000,000</strong><div class="wallet-sub"><span>◈ GreenPoints</span><b id="pointsText">0</b></div><p>Simulation credits only. No real money.</p></div>
+        <div class="sidebar-heading">YOUR ADVENTURE <span id="questCount">0/20</span></div>
+        <div class="quest-list" id="questList"></div><div class="service-quest-stat"><span>✦ GREENREV EXPERIENCES</span><strong id="serviceQuestMeter">0/5 services</strong></div>
+        <div class="tip-panel"><div>💡 <b>Founder tip</b></div><p>Every roadside challenge introduces a real GreenRev product journey — discover, trust, transact, and repeat.</p></div>
+      </aside>
+      <main class="play-column">
+        <section class="scene card-panel">
+          <div class="scene-top"><div><div class="eyebrow">LIVE SIMULATION <span class="green-dot">●</span></div><h1 id="sceneTitle">Abuja → Kano</h1><p id="sceneSubtitle">The adventure starts in the Federal Capital Territory.</p></div><div class="weather"><span>☀</span><div>NAIJA SUNSHINE<small>DRIVE SAFE</small></div></div></div>
+          <div class="journey-track"><span id="routeOrigin">ABUJA</span><div class="journey-bar"><div id="journeyFill"></div><i id="journeyCar">🚙</i></div><span id="routeDestination">KANO</span></div>
+          <div class="canvas-shell" id="canvasShell">
+            <canvas id="game" width="960" height="560" tabindex="0" aria-label="GreenRev driving game with fully 3D roads, modelled cars, buildings and four 3D camera angles"></canvas>
+            <div class="canvas-vignette"></div>
+            <div class="canvas-hud top-left"><span class="hud-tag">📍 <b id="locationText">ABUJA</b></span><span class="hud-tag">🛣️ <b id="distanceText">0 / 430 km</b></span></div>
+            <div class="canvas-hud top-right"><span class="hud-tag">⚡ ENGINE <b id="healthText">100%</b></span><span class="hud-tag"><span id="fuelLabel">FUEL</span> <b id="fuelText">100%</b></span></div>
+            <div class="view-controls" aria-label="Camera views"><span>CAMERA</span><button type="button" data-view="map" title="Top-down view (key 1)">🚁 Aerial</button><button type="button" data-view="chase" title="Third-person chase view (key 2)">🚘 Follow</button><button type="button" data-view="driver" title="First-person driver's-eye view (key 3)">👀 Cockpit</button><button type="button" data-view="far" title="Far aerial view (key 4)">🛰️ Far</button></div>
+            <div class="trip-clock"><span>⏱ JOURNEY TIME</span><strong id="elapsedText">00:00:00</strong><small id="timeStatus">READY TO DEPART</small></div>
+            <div class="npc-bubble" id="npcBubble"><span id="npcAvatar">🧑🏾‍💻</span><div><strong id="npcName">NAIJA EXPLORER</strong><small id="npcSpeech">Ready for the adventure?</small></div></div>
+            <div class="traffic-status" aria-live="off">🚘 LIVE TRAFFIC <strong id="trafficCount">21 vehicles</strong></div><div class="vehicle-warning" id="vehicleWarning" hidden>⚠ VEHICLE ALERT</div>
+            <div class="steering-hud" aria-live="off"><span>STEERING <strong id="steeringText">CENTRE</strong></span><div class="steering-track"><i id="steeringMarker"></i></div></div>
+             <div class="rest-plaza-menu" id="restPlazaMenu" hidden aria-label="Rest stop actions"><button type="button" data-rest="food">🍲 Order food</button><button type="button" data-rest="wc">🚻 Convenience</button><button type="button" data-rest="fuel">⛽ Refuel</button><button type="button" id="restContinue" data-rest="continue" disabled>🚗 Continue</button></div>
+             <div class="speedo"><strong id="speedText">0</strong><small>KM/H</small></div>
+            <div class="pause-label" id="pauseLabel" hidden>STORY EVENT • PULL OVER</div><button type="button" id="btnResumeEvent" class="resume-event" hidden>▶ Continue this mission</button>
+            <div class="toast-stack" id="toasts" aria-live="polite"></div>
+            <div class="mobile-drive" aria-label="On-screen driving controller"><button type="button" data-drive="left" aria-label="Steer left">◀ LEFT</button><button type="button" data-drive="brake" aria-label="Brake">▼ BRAKE</button><button type="button" data-drive="accelerate" class="gas" aria-label="Accelerate">▲ GAS</button><button type="button" data-drive="right" aria-label="Steer right">RIGHT ▶</button></div>
+          </div>
+          <div class="driving-bottom"><div class="control-hint"><span>W / ↑</span> Gas <span>A / ←</span> Left <span>D / →</span> Right <span>S / ↓</span> Brake <span>1–4</span> Camera</div><div class="drive-buttons"><button class="button subtle" id="btnHorn">🔊 Horn</button><button class="button subtle" id="btnTime">🌤️ Time & light</button><button class="button subtle" id="btnBoost">⚡ Boost</button><button class="button subtle" id="btnGarage">🚘 Garage</button><button class="button subtle" id="btnBank">🏦 Game Bank</button><button class="button subtle" id="btnCruise">▶ Auto-drive</button><button class="button accent" id="btnNextScene">⚡ Jump to next story event</button></div></div>
+        </section>
+        <section class="story-strip"><div class="story-icon" id="storyIcon">🧭</div><div><small>CURRENT OBJECTIVE</small><strong id="objectiveTitle">Hit the road!</strong><p id="objectiveText">Accelerate or use Auto-drive to experience the route.</p></div><button id="btnOpenRelevant" class="button subtle">Open phone ↗</button></section>
+        <section class="bottom-stats"><div><span>YOUR RIDE</span><strong id="carName">Toyota Corolla • 2012</strong></div><div><span>TRUST SCORE</span><strong id="trustText">60 / 100</strong></div><div><span>TRIP STATUS</span><strong id="tripStatus">ROAD READY</strong></div></section>
+      </main>
+      <aside class="right-rail">
+        <div class="phone"><div class="phone-top"><div class="phone-island"></div><div class="phone-system"><span>9:41</span><span>●●● ▰</span></div><div class="phone-title"><span class="app-logo">G</span><div><b>GreenRev</b><small>My mobility companion</small></div><span class="notification-dot"></span></div></div>
+          <div class="phone-tabs" role="tablist"><button data-tab="home" class="active">Home</button><button data-tab="mechanics">Mechanics</button><button data-tab="parts">Parts</button><button data-tab="cars">Cars + AI</button><button data-tab="documents">Papers</button><button data-tab="dealer">Dealer</button><button data-tab="services">🚚 Services</button><button data-tab="bank">🏦 Wallet</button></div>
+          <div class="phone-body" id="phoneBody"></div><div class="phone-bottom"><div></div></div>
+        </div>
+        <div class="mini-disclaimer"><span>✦</span> Fictional game data. Hosted payments use Paystack TEST mode only when configured; no real money or live GreenRev service integration.</div>
+      </aside>
+    </div>
+    <footer class="footer"><span>GREENREV ROADTRIP · INTERACTIVE PRODUCT DEMO</span><span>Nigerian mobility: Abuja • Kaduna • Kano | Lagos • Ibadan • Abuja</span><span>TRUE 3D WEBGL • DAY/NIGHT EFFECTS • TEST PAYMENTS</span></footer>
+  </div>
+  <div class="modal-layer" id="modalLayer" hidden><div class="modal-backdrop"></div><section class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="close-modal" id="modalClose" aria-label="Close dialog">×</button><div class="modal-kicker" id="modalKicker">NEW MISSION</div><div class="modal-emoji" id="modalEmoji">🚙</div><h2 id="modalTitle">Title</h2><p id="modalDescription"></p><div id="modalContent"></div><div id="modalActions" class="modal-actions"></div></section></div>
+  <script src="world3d.js"></script>
+  <script src="game.js"></script>
+</body>
+</html>

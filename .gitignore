@@ -1,0 +1,4 @@
+.env
+.local-test-payments.json
+node_modules/
+*.log
