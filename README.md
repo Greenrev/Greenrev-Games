@@ -1,358 +1,676 @@
 # GreenRev Roadtrip
 
-A 3D road-trip game across Nigeria, built to bring people back to the GreenRev web and mobile apps every day. You drive city to city by road:
-- dodging potholes
-- crawling through go-slow while hawkers sell pure water and Agege bread through your window
-- stopping for police, military, FRSC and VIO checkpoints
-- braking for cattle crossing the road
+**A 3D Nigerian road-trip game connecting everyday driving adventures with the GreenRev ecosystem.**
 
-When your car breaks down, your tyre bursts or VIO says the car isn't roadworthy, the game sends you to **GreenRev**: mechanics, parts, the marketplace, and dealer sign-up.
+**Version:** v3  
+**Language:** TypeScript  
+**Integration targets:** Next.js, Node.js, React and mobile WebViews
 
-| | |
-|---|---|
+GreenRev Roadtrip takes players across Nigerian cities, highways and regional landscapes. Players navigate traffic, potholes, checkpoints, roadside stops and changing weather while managing their vehicle, driver energy, journey contracts and in-game money.
+
+The game introduces GreenRev services through relevant moments in the journey: a breakdown can lead to mechanics, missing safety equipment can lead to parts vendors, and a featured dealer vehicle can lead to its marketplace listing.
+
+Daily missions, changing road conditions, unlockable journeys, referrals and challenges are designed to encourage repeat play and measurable visits to the GreenRev web and mobile applications.
+
+> In-game money, loans, fines, compensation and driving thresholds are simulation rules. They are not real banking products, cash payouts or a statement of official road regulations.
+
+## Contents
+
+- [Version 3 highlights](#version-3-highlights)
+- [Journeys and regions](#journeys-and-regions)
+- [Driving and road events](#driving-and-road-events)
+- [Controls](#controls)
+- [Daily engagement and progression](#daily-engagement-and-progression)
+- [Contracts and the in-game economy](#contracts-and-the-in-game-economy)
+- [Audio and radio](#audio-and-radio)
+- [Featured dealer vehicles](#featured-dealer-vehicles)
+- [Referrals and challenges](#referrals-and-challenges)
+- [GreenRev service journeys](#greenrev-service-journeys)
+- [Roadside advertising](#roadside-advertising)
+- [Run locally](#run-locally)
+- [Build and validation commands](#build-and-validation-commands)
+- [Embedding and host integration](#embedding-and-host-integration)
+- [Saving progress](#saving-progress)
+- [Code map](#code-map)
+- [TypeScript notes](#typescript-notes)
+- [Roadmap](#roadmap)
+
+## Version 3 highlights
+
+| Area | Description |
+| --- | --- |
+| **TypeScript migration** | A TypeScript codebase intended to fit GreenRev's Next.js frontend and Node.js backend. |
+| **Reusable mounting** | `mountRoadtrip(element, config)` for embedding the game, with Next.js client/page/API integration examples. |
+| **Backend integration** | Node.js API components for featured listings, referral rewards, credit purchases, cloud saves and GreenRev Points. |
+| **Journey contracts** | Passenger, delivery, fragile-cargo and premium pickup jobs, with timed objectives and trip settlement. |
+| **Trip finances** | Opening money, earnings, spending by category, net result and journey time. |
+| **Difficulty settings** | Easy, Normal and Naija Hard, affecting traffic, hazards, damage, fines, events and pay. |
+| **Expanded routes** | Four additional journeys: Lagos–Akure, Lagos–Port Harcourt, Abuja–Enugu and Kano–Sokoto. |
+| **Road challenges** | Toll plazas, agberos, road works, floods, one-way drivers, hidden speed bumps and fuel scarcity. |
+| **Time and sound** | Time of day, journey timer, daylight arrival bonus, camera views, a two-tone horn and radio/sound controls. |
+| **Retention and discovery** | Daily missions, referrals, challenges, achievements, featured dealer cars and contextual GreenRev links. |
+
+Version 3 also improves flyover and overpass ramps, level junctions, roundabout placement, traffic around herds, checkpoint voice timing and default voice settings.
+
+## Journeys and regions
+
+### Available journeys
+
+| Journey | Cities and landmarks | Unlock requirement |
+| --- | --- | --- |
+| **Lagos → Abuja** | Lagos · Ibadan · Ilorin · Jebba / River Niger · Mokwa · Bida · Abuja | Open |
+| **Lagos → Calabar** | Lagos · Ore · Benin City · Onitsha / Second Niger Bridge · Owerri · Aba · Uyo · Calabar | Open |
+| **Abuja → Kano** | Abuja · Kaduna · Zaria · Kano | Complete Lagos → Abuja |
+| **Abuja → Jos** | Abuja · Keffi · Akwanga · Jos / Plateau climb | Complete Lagos → Abuja |
+| **Kano → Maiduguri** | Kano · Potiskum · Damaturu · Maiduguri | Complete Abuja → Kano |
+| **Lagos → Akure** | Lagos · Abeokuta · Ibadan · Osogbo · Akure | Open |
+| **Lagos → Port Harcourt** | Lagos · Ore · Benin City · Warri · Port Harcourt | Complete Lagos → Calabar |
+| **Abuja → Enugu** | Abuja · Lokoja / the Confluence · Anyigba · Enugu | Complete Lagos → Abuja |
+| **Kano → Sokoto** | Kano · Katsina · Gusau · Sokoto | Complete Abuja → Kano |
+
+The route set contains **nine journeys and 34 cities**. City arrivals contribute passport stamps, local facts and regional food discoveries.
+
+Each journey leg has its own road quality, traffic level and security/checkpoint profile. City and route definitions are maintained in [`src/data/routes.ts`](src/data/routes.ts).
+
+### Regional scenery
+
+| Region | Scenery and atmosphere |
+| --- | --- |
+| **South** | Palms, rainforest, creeks and rain. |
+| **Middle Belt savanna** | Acacias, savanna and mud compounds. |
+| **Sahel** | Harmattan haze, baobabs and northern landscapes. |
+| **Jos Plateau** | Hills, climbs and boulders. |
+
+### Gameplay screenshots
+
+The gallery uses files in `docs/screens/`. Include these images when committing the project so they display on GitHub.
+
+| Go-slow and city traffic | Lagos–Ibadan road |
+| --- | --- |
 | ![Go-slow with hawkers](docs/screens/goslow.png) | ![Lagos–Ibadan Expressway](docs/screens/lagos.png) |
+| **Sahel and cattle crossing** | **Rain on the Ore–Benin road** |
 | ![Sahel with cattle](docs/screens/sahel.png) | ![Rain on the Ore–Benin road](docs/screens/rain.png) |
 
-## What's new in v3
+## Driving and road events
 
-- **TypeScript**, to match GreenRev's stack (Next.js front end, Node.js back end). `npm run typecheck`.
-- **Next.js:** `mountRoadtrip(element, config)` plus a ready client component, page and API route in [`nextjs/`](nextjs/README.md).
-- **Node.js API** in [`server/`](server/README.md): featured listings, referral rewards, Paystack credit purchases, cloud saves and GreenRev Points.
-- **Money that matters:** contracts for every journey (race for money), a full trip money summary (start, earned, spent, net, time), wallets that go negative, a bank with loans, and real-money credit packs.
-- **Three levels:** Easy, Normal and Naija Hard (more traffic, potholes and fines, and up to 45% more pay).
-- **New Nigerian road challenges:** toll plazas, agberos collecting "owo ita", road works with lane closures, flooded roads, one-way drivers, hidden speed bumps ("gallops") and fuel scarcity.
-- **4 new journeys, 11 new cities:** Lagos → Port Harcourt, Lagos → Akure, Abuja → Enugu, Kano → Sokoto.
-- **Clock and timer:** time of day, trip time against the job's target, and a daylight arrival bonus.
-- **Car radio and sound panel:** live FM streams (with station permission), two built-in stations, licensed songs from a playlist, and volume controls without pausing.
-- **Police and FRSC patrols** on the highway, with sirens, speed checks and pull-overs.
-- **Fixes:** the overpass now has earth ramps down to the ground, so its traffic no longer drives into the air; road works, floods and one-way drivers now appear on most journeys; a real two-tone car horn; roundabout palms and monument no longer sit on your lane; junction roads under flyovers sit on level ground (no more flying cars); flyover ramps sit on embankments; traffic stops for goats, cows and herders; police voices only play at the checkpoint; the robot voice is off by default.
+### Traffic and road design
 
-## Journeys
+The game includes stylised danfos, kekes, okadas, intercity buses, trailers, tankers and other vehicles. Dual carriageways use right-hand traffic, with a faster lane near the median. Honking can encourage slower traffic to move over.
 
-| Journey | Cities | Unlock |
-|---|---|---|
-| **Lagos → Abuja** | Lagos · Ibadan · Ilorin · Jebba (River Niger) · Mokwa · Bida · Abuja | Open |
-| **Lagos → Calabar** | Lagos · Ore · Benin City · Onitsha (Second Niger Bridge) · Owerri · Aba · Uyo · Calabar | Open |
-| **Abuja → Kano** | Abuja · Kaduna · Zaria · Kano | Finish Lagos → Abuja |
-| **Abuja → Jos** | Abuja · Keffi · Akwanga · Jos (Plateau climb) | Finish Lagos → Abuja |
-| **Kano → Maiduguri** | Kano · Potiskum · Damaturu · Maiduguri | Finish Abuja → Kano |
-| **Lagos → Akure** | Lagos · Abeokuta · Ibadan · Osogbo · Akure | Open |
-| **Lagos → Port Harcourt** | Lagos · Ore · Benin City · Warri · Port Harcourt | Finish Lagos → Calabar |
-| **Abuja → Enugu** | Abuja · Lokoja (the Confluence) · Anyigba · Enugu | Finish Lagos → Abuja |
-| **Kano → Sokoto** | Kano · Katsina · Gusau · Sokoto | Finish Abuja → Kano |
+Road features include:
 
-There are 34 cities, each with a passport stamp, a local fact and a must-eat dish. Each leg has its own:
-- **road quality:** pothole density, e.g. the Ore–Benin road is rough
-- **traffic level**
-- **security profile:** how many police, military, FRSC and VIO stops
+- The Jebba Bridge and Second Niger Bridge, with river scenery, piers and canoes.
+- Smaller southern creek crossings.
+- Flyovers, overpasses and traffic passing underneath or above the player's route.
+- Roundabouts with traffic wardens, planted islands and monuments.
+- Embankments and ramps connecting elevated roads to the surrounding terrain.
 
-The **biome** sets the scenery and weather:
-- **South:** palms and rainforest, with rain
-- **Middle Belt savanna:** acacias and mud compounds
-- **Sahel:** harmattan haze and baobabs
-- **Jos Plateau:** hills and boulders
+Traffic is designed to follow at a safe distance, brake for a stopped player, avoid moving into the player's lane and respond to herds and emergency sirens. Rear-impact handling is intended to avoid unfairly treating every following-vehicle collision as the player's fault.
 
-Adding a city is one entry in `src/data/routes.ts`.
+### Road challenges
 
-## On the road
+| Challenge | In-game behaviour |
+| --- | --- |
+| **Potholes** | Shallow potholes jolt the car; deep ones can damage it or burst a tyre. Vehicle toughness, suspension and weather affect the experience. |
+| **Go-slow** | City and mid-route traffic jams, including broken-down trailers, market activity and road works. |
+| **Hawkers** | Roadside sellers move between vehicles; snacks can restore driver energy. |
+| **Toll plazas** | Stop and pay; running a barrier can produce a fine and vehicle damage. |
+| **Agberos** | Encounters involving a levy, an argument or an appeal to a warden, with different risks. |
+| **Road works** | Lane closures, cones and a need to merge in time. |
+| **Flooded roads** | Driving too quickly through water can stall the vehicle. The game threshold is 30 km/h. |
+| **One-way drivers** | An approaching vehicle in the player's lane creates an avoidance challenge. |
+| **Hidden speed bumps** | Unmarked town-entry “gallops” punish excessive speed. |
+| **Fuel scarcity** | Some pumps are unavailable, with higher-priced roadside fuel as an alternative. |
+| **Cattle and goats** | Herd crossings cause traffic to stop while animals and herders pass. |
+| **Patrol vehicles** | Police/FRSC vehicles can react to speeding, activate a siren and request a stop. |
 
-- **Nigerian traffic:**
-  - **Lagos:** yellow **danfos** that cut in, **kekes**, **okadas** with a passenger
-  - **Highways:** intercity luxury buses, trailers and tankers in the slow lane
-  - **Lane discipline:** right-hand traffic on a dual carriageway, with a fast lane by the median; honk and slow cars move over
-- **Bridges, flyovers and roundabouts:**
-  - **Named Niger crossings:** the steel-truss **Jebba Bridge** and the cable-stayed **Second Niger Bridge**, with the river below, piers, and fishermen in canoes. The South also gets smaller creek bridges (narrow, no overtaking).
-  - **City flyovers:** the road climbs over a busy junction, with traffic crossing underneath and traders under the deck. Highway **overpasses** cross above you, with their own traffic.
-  - **Roundabouts:** the carriageway swings around an island with palms and a monument in green-white-green, a traffic warden directing traffic, and cars queueing on the side roads. Above 60 km/h the warden (LASTMA in Lagos) fines you.
-- **Rest stops:** one on almost every leg, signposted 500 m ahead. Stop beside it and pull in:
-  - **Fuel** at the forecourt.
-  - **Regional food** that restores driver energy: jollof and amala in the South, pounded yam and suya in the middle belt, tuwo, kilishi and fura da nono in the North, Irish potato porridge on the Plateau.
-  - **Rest** for an hour to get back to full energy.
-  - **Quick mechanic check:** +15% condition.
-  - **Missing FRSC safety kit:** buy it there.
-  - Each stop has a buka, a rest house, parked trailers and travellers eating. Long legs also get a plain filling station.
-- **Potholes:** shallow ones jolt you, deep ones can burst a tyre. Tougher cars and suspension upgrades take less damage, and rain makes them harder to see.
-- **Go-slow:** a city jam at the start and end of busy legs, plus random mid-route jams (a broken-down trailer, market day, road works). **Hawkers** walk between the cars; buy a snack to restore your energy.
-- **Checkpoints:** slow down when you see the drums, stop, and answer the officer:
-  - **Police:** "Particulars?" Expired papers mean an official fine with a receipt.
-  - **Military stop and search:** "Everybody come down! Open your boot."
-  - **FRSC:** checks your fire extinguisher, warning triangle and spare tyre.
-  - **VIO:** roadworthiness. Below 50% condition you're fined and pointed to a mechanic.
-  - **Running a checkpoint:** a heavy fine.
-- **FRSC radar:** a 100 km/h limit sign, then a speed check.
-- **Animals:** goats everywhere and cattle herds with a herder in the North. Hit one and you pay compensation.
-- **People everywhere:** walkers on the footpaths, hawkers with trays on their heads, officers waving traffic down, roadside mechanics. They jump out of the way, with speech bubbles ("Oga, easy o!", "Haba!"). Nobody gets hurt in this game.
-- **Car upkeep:** fuel, car condition and driver energy. Filling stations on the way, a black-market jerrycan if you run dry, breakdowns when condition hits zero.
-- **Time and weather:** a day-night cycle with headlights and glowing traffic lights, rain in the South, harmattan haze in the Sahel.
-- **Seven camera views:** chase, bonnet, driver (cockpit), front view (looking back at your car), aerial, top-down and cinematic. Switch with the **🎥** button at the top of the screen, or **C** on a keyboard.
-- **Paint shop:** 12 colours for your own car in the Garage, free to change. Traffic comes in bright colours too.
-- **Fair traffic behind you:** cars behind keep a safe gap, brake hard when you stop, and overtake in the other lane when it's clear. Nobody changes lanes into you. If a car still knocks you from behind (usually after you cut in front of it), it's not your fault: a small dent, no crash on your record.
-- **Voices:** hype men, police and roadside lines are spoken. Record them in your own voice; see [public/voice/README.md](public/voice/README.md).
+Patrols use 100 km/h as the in-game speeding trigger; ignoring a patrol for 25 seconds can double the in-game fine. Roundabout wardens use a separate 60 km/h game threshold.
 
-## Retention loop
+### Checkpoints
 
-- **Daily streak:** fuel money on check-in, growing over 7 days (₦50k → ₦500k), then repeating. Miss a day and it resets.
-- **Daily missions:** 3 per day, the same for every player that date, e.g. "Dodge 15 potholes", "Buy from 3 hawkers", "Check out GreenRev Marketplace".
-- **Fresh roads every day:** each leg's potholes, checkpoints, jams and weather are seeded by the date.
-- **Progression:** unlockable journeys, a city passport, 12 achievements, XP levels and best times.
-- **Garage:** six cars, from a Tokunbo Corolla and the Honda Accord "Evil Spirit" to the Innoson G5, Hilux, Lexus RX 350 and Land Cruiser V8. Also tyres, suspension and engine upgrades, and the safety kit FRSC checks for.
+| Checkpoint | In-game interaction |
+| --- | --- |
+| **Police** | Vehicle papers and an official-fine/receipt interaction when papers are expired. |
+| **Military** | A stop-and-search encounter. |
+| **FRSC** | Safety-kit checks for a fire extinguisher, warning triangle and spare tyre. |
+| **VIO** | A condition/roadworthiness encounter; the game flags condition below 50%. |
+| **Missed stop** | Running a checkpoint leads to a heavier in-game penalty. |
 
-## Jobs, money and the bank
+Pedestrians, officers, traders, mechanics, hawkers and herders bring the roads to life. The intended presentation is non-graphic: people move out of the way and respond through dialogue, gestures or speech bubbles.
 
-**Contracts.** Before each journey you pick a job, or just drive. Offers change daily and are the same for everyone:
-- **Full load of passengers:** pay plus tips. Potholes, hard braking and crashes upset the passengers ("Driver, take am easy o!").
-- **Express delivery:** big pay for beating the clock; late delivery pays half.
-- **Fragile cargo:** tomatoes and eggs; every pothole breaks some.
-- **Chief's pickup:** any crash or fine loses the big bonus.
+### Vehicle upkeep and rest stops
 
-The HUD shows the time of day, your trip time against the job's target, and the job's pay. At the end you get a full statement: what you started with, every naira earned and spent by category, the net for the trip, and the time.
+Fuel, vehicle condition and driver energy affect a trip. Filling stations, repairs, regional food and rest stops help the player continue.
 
-**Going into the red.** Fines, tolls, levies and roadside repairs are always paid, even if your wallet goes negative. Repairs and fuel can use an overdraft up to a limit that grows with your level. A negative wallet costs 5% per leg and locks cars and upgrades.
+Rest stops can provide:
 
-**The bank** (Mama Bisi Microfinance, fictional). Three loan sizes with interest per leg; a quarter of each leg's pay repays the loan automatically. Your credit limit grows as you finish legs without crashing. "Debt free" is an achievement.
+- Fuel and regional food.
+- A one-hour rest to restore energy.
+- A quick mechanic check that restores 15% condition.
+- Missing safety-kit items.
+- A buka, rest house, parked vehicles and traveller activity.
 
-**GreenRev credits (real money).** Credit packs from ₦500 add game money. They can never be cashed out. Payment runs on the GreenRev site (Paystack) or in the store apps (Apple/Google in-app purchase); the backend confirms it and the game claims it once. See `credits` in `src/config.ts` and [`server/`](server/README.md).
+Food varies by region, including jollof/amala, pounded yam/suya, tuwo/kilishi/fura da nono and Plateau potato dishes.
 
-**Levels.** Easy, Normal and Naija Hard change traffic, potholes, fines, crash damage, event frequency and pay. Change it from the job screen or Settings.
+### Time, weather and cameras
 
-## Road challenges
+The game uses a day/night cycle, headlights, traffic lights, rain and harmattan effects. Journey time and the job target are shown on the HUD; daylight arrival can earn a bonus.
 
-| Challenge | What happens |
-|---|---|
-| Toll plaza | Stop and pay; run the barrier for a fine and a dent |
-| Agberos | "Owo ita!" Pay, argue, or shout for the warden; each has a risk |
-| Road works | A lane closes behind cones; merge in time or knock cones down |
-| Flooded road | Over 30 km/h and the engine may drink water and stall |
-| One-way driver | A car comes at you in your lane; dodge it for a bonus |
-| Hidden speed bumps | Unmarked "gallops" entering towns punish speeding |
-| Fuel scarcity | "No fuel" at the pumps; jerrycan boys sell at black-market prices |
-| Cattle and goats | All traffic, both directions, stops while the herd crosses |
-| Police and FRSC patrols | Marked pickups with flashing light bars cruise below the limit (and pass on the other side). Overtake one above 100 km/h and the siren comes on: stop and you may talk your way out; ignore it for 25 seconds and the fine doubles. Other drivers move over for the siren |
+Seven camera views are available:
 
-## Car radio and sound
+1. Chase.
+2. Bonnet.
+3. Driver/cockpit.
+4. Front-facing view looking back at the car.
+5. Aerial.
+6. Top-down.
+7. Cinematic.
 
-The 📻 button on the HUD changes station; 🔊 opens a sound panel (music and effects volume, mute, voices, horn test) without pausing. Built-in stations **GreenRev FM** (Afrobeats-style) and **Highlife Hour** are generated live, so there's nothing to license. To add real songs, list MP3s in `public/music/playlist.json` (`{ "tracks": [{ "title", "artist", "src" }] }`) and a **Naija Hits** station appears. Only add tracks you have the right to stream: your own, royalty-free, or by agreement with the artist or label.
+Use **C** or the **camera button** to cycle views. The garage also includes 12 paint colours for the player's car.
 
-### Live radio
+## Controls
 
-The radio can also carry real FM stations' internet streams. They appear first on the 📻 button, marked LIVE:
+| Input | Action |
+| --- | --- |
+| **↑ / W** | Accelerate. |
+| **↓ / S / Space** | Brake. |
+| **← / → / A / D** | Steer. |
+| **H** | Sound the horn; also interact with a passing featured car. |
+| **C** | Change camera. |
+| **B** | Buy from a hawker when available. |
+| **F** | Refuel when available. |
+| **P / Esc** | Pause. |
+| **On-screen controls** | Driving and interaction controls for phones, including the camera button. |
 
-```js
+## Daily engagement and progression
+
+| Feature | Purpose |
+| --- | --- |
+| **Daily streak** | Check-in fuel money grows across a seven-day cycle, then repeats. The defaults range from ₦50,000 to ₦500,000 in game currency; missing a day resets the streak. |
+| **Daily missions** | Three missions per day, such as avoiding potholes, buying from hawkers or visiting GreenRev Marketplace. |
+| **Daily road variation** | Date-seeded hazards, checkpoints, jams and weather create a new road plan. |
+| **Progression** | Unlockable journeys, city passport stamps, XP, best times and 12 achievements. |
+| **Garage** | Six vehicles, plus tyres, suspension, engine upgrades and safety equipment. |
+
+The garage includes a Tokunbo Corolla, Honda Accord “Evil Spirit”, Innoson G5, Hilux, Lexus RX 350 and Land Cruiser V8.
+
+## Contracts and the in-game economy
+
+### Journey contracts
+
+Players can accept a job before travelling or choose to drive without one. Daily offers are intended to be consistent for players on the same date.
+
+| Contract | Objective |
+| --- | --- |
+| **Passenger load** | Earn fares and tips while keeping passengers comfortable. Hard braking, potholes and crashes affect the journey. |
+| **Express delivery** | Beat a time target for higher pay; late delivery pays less. |
+| **Fragile cargo** | Protect goods such as tomatoes and eggs from road damage. |
+| **Chief's pickup** | Complete a careful journey without crashes or fines to retain the larger bonus. |
+
+At arrival, the trip summary shows starting money, earnings, spending by category, net result and journey time.
+
+### Negative balances and the fictional bank
+
+Fines, tolls, levies and roadside repairs can push the game wallet below zero. Fuel and repairs can use a level-dependent overdraft. The negative-wallet charge is 5% per leg, with vehicle purchases and upgrades restricted while the wallet is negative.
+
+**Mama Bisi Microfinance is fictional.** Its game loans have three sizes, interest per leg and automatic repayment from a quarter of each leg's pay. Progress can increase the player's credit limit, and clearing debt contributes to an achievement.
+
+### Difficulty
+
+**Easy**, **Normal** and **Naija Hard** change traffic, hazards, penalties, damage, event frequency and pay. Harder play offers up to 45% additional pay. Difficulty can be changed from the job screen or settings.
+
+### Optional credit purchases
+
+The credit-purchase integration is designed for optional packs starting from ₦500 that add **non-redeemable game currency**. Purchased game currency cannot be cashed out.
+
+Credit purchases require the host application and backend to confirm the transaction and grant it once. Web Paystack checkout and mobile Apple/Google purchase handling require their respective host/provider integrations and configuration.
+
+A client-only or historical test checkout is not a production payment wallet. Review [`src/config.ts`](src/config.ts) and [`server/README.md`](server/README.md) before enabling purchases, including confirmation, duplicate handling and refunds.
+
+## Audio and radio
+
+The HUD provides station switching and a sound panel for music/effects volume, mute, voices and horn testing without pausing the game.
+
+The built-in stations are **GreenRev FM** and **Highlife Hour**, using procedural music. Recorded voice clips and optional text-to-speech provide roadside and checkpoint dialogue. Robot speech is disabled by default.
+
+Voice recording guidance is in [`public/voice/README.md`](public/voice/README.md).
+
+### Add a music playlist
+
+Use music you have permission to distribute or stream. A playlist at `public/music/playlist.json` can use this structure:
+
+```json
+{
+  "tracks": [
+    {
+      "title": "Your licensed track",
+      "artist": "Your artist",
+      "src": "/music/your-licensed-track.mp3"
+    }
+  ]
+}
+```
+
+The playlist enables the **Naija Hits** station. Add the actual audio files at the configured paths.
+
+### Configure live streams
+
+Set the configuration before the game loads:
+
+```javascript
 window.GREENREV_CONFIG = {
-  radio: { live: [{ name: "Station FM 100.0", url: "https://stream.example.com/live" }] },
+  radio: {
+    live: [
+      {
+        name: "Station FM 100.0",
+        url: "https://stream.example.com/live"
+      }
+    ]
+  }
 };
 ```
 
-- Streams must be `https://`. If a station is offline, the player is told and can tap to the next one.
-- **Get each station's permission before adding it.** A station's stream and the music in it belong to the station and the rights holders; carrying it inside your app is a separate use from listening on the station's own site. Many stations welcome partnerships (extra listeners, and GreenRev could sponsor a show or run ads), so approach them as a partner. Take legal advice on the agreement.
-- The hosted Claude demo can't play outside streams (it blocks connections to other sites), so test live radio on your own deployment.
+Use actual HTTPS streams with permission from the station and relevant content owners. Replace the illustrative URL before deployment. Test playback in the deployed application, including the unavailable-station fallback.
 
-## Hype: featured dealer cars
+Combine required settings into one configuration object when using several of the examples in this README.
 
-About once a minute a **featured luxury car** (a real GreenRev listing) appears ahead of you, driving a little slower so you catch up and pass right beside it. A hype man by the roadside shouts it out ("This luxury don land! Who get am?!"), the car gets a 🔥 dealer tag, and a **HYPE IT** button appears.
+## Featured dealer vehicles
 
-- **Hype it:** tap the button, tap the car, or honk. Quick reactions and rarer cars earn more hype points and naira. A daily mission and two achievements use hype.
-- **View this car:** the hype toast opens a listing card: dealer, city and price, with **View this car on GreenRev** and **Save to dream garage**. The game pauses while it is open and resumes with **Keep driving**.
-- **After the leg:** the city arrival screen lists the cars you hyped on that road.
-- **Dream garage:** in the menu, with your total hype. Each saved car links to its listing.
-- **No brands:** the cars are stylised (luxury saloon, luxury 4x4, sports coupe) with no logos, and no hype line names a brand. Brand names appear only in the listing title the dealer provides.
+Featured vehicles connect the game to GreenRev dealer listings. A stylised vehicle appears on the road, receives a dealer tag and can be hyped through a button, tap or horn interaction.
 
-**Adding real listings** (paid placement for dealers): add them to `public/featured.json`, or serve the same shape from the GreenRev backend and point `featured.url` at it:
+The discovery loop includes:
+
+- Hype points and game money for reactions.
+- A listing card with dealer, city, title and price.
+- A **View this car on GreenRev** link.
+- A **Save to dream garage** action.
+- A pause while the card is open and a **Keep driving** action.
+- Arrival-screen and dream-garage access to discovered cars.
+
+Featured models are stylised saloons, SUVs or coupes without brand logos. A real listing title may contain the dealer's own vehicle description.
+
+### Listing configuration
+
+Add entries to `public/featured.json`, or configure `featured.url` to return the same structure from the backend:
 
 ```json
-{ "cars": [
-  { "id": "ikoyi-autos-saloon-1", "dealer": "Ikoyi Autos", "city": "Lagos",
-    "title": "Black luxury saloon, 2024", "body": "limo", "color": "#0d0d0f",
-    "price": 185000000, "listingUrl": "https://www.greenrevs.com/shop/...",
-    "start": "2026-11-01", "end": "2026-11-30" } ] }
+{
+  "cars": [
+    {
+      "id": "sample-dealer-saloon-1",
+      "dealer": "Sample Dealer",
+      "city": "Lagos",
+      "title": "Black luxury saloon, 2024",
+      "body": "limo",
+      "color": "#0d0d0f",
+      "price": 185000000,
+      "listingUrl": "https://example.com/vehicle-listing",
+      "start": "2026-11-01",
+      "end": "2026-11-30"
+    }
+  ]
+}
 ```
 
-- `body` is `limo` (luxury saloon), `luxsuv` (luxury 4x4) or `coupe` (sports coupe). `color` is any hex.
-- `start`, `end`, `price` and `listingUrl` are optional. Without `listingUrl`, the card searches the Marketplace for the title.
-- Until any listing is live, sample cars run so the loop works from day one; their card says they're samples.
-- How often they appear: `featured.minGapSeconds` and `featured.maxGapSeconds` in `src/config.ts`.
+This is an illustrative payload, not a live dealer campaign.
 
-**Reporting** (for dealers and your own funnel): `hype_car {car, dealer, points}`, `hype_card_open {car, reason}`, `hype_save {car}`, and `cta_click {target: "listing", car, dealer, reason}`. Listing links carry the game's UTM tags with `utm_content` set to where the click came from (`hype_toast`, `arrival_hyped`, `dream_garage`).
+| Field | Meaning |
+| --- | --- |
+| `body` | `limo`, `luxsuv` or `coupe`. |
+| `color` | Vehicle colour as a hex value. |
+| `price` | Optional listing price. |
+| `listingUrl` | Optional real listing link; the fallback searches Marketplace by title. |
+| `start` / `end` | Optional campaign dates. |
 
-## Invite friends and challenges
+Sample cars can keep the loop available before real listings are configured; their cards should remain identified as samples. Appearance frequency is controlled by `featured.minGapSeconds` and `featured.maxGapSeconds` in `src/config.ts`.
 
-- **Invite link:** every player gets a 6-letter code. **🤝 Invite friends** in the menu shares it (phone share sheet, WhatsApp or copy). The link is the game's address plus `#ref-CODE`.
-- **Welcome bonus:** a new player who opens a friend's link gets ₦200,000 fuel money once (`referral.welcomeBonus`). Your own code doesn't count.
-- **Challenge link:** after finishing a journey, **Challenge a friend to beat my time** shares a link with the journey and your time (`#ref-CODE-ch-lagos-abuja-t-754`). Your friend sees the challenge when they open it, and finishing that journey faster earns them a ₦100,000 bonus.
-- **Rewarding the inviter needs your backend**, because one phone can't verify another phone. The game emits `referral_open {ref}`, `referral_join {ref}` (a brand-new player joined with a code), `invite_share {code, kind}` and `challenge_result`. Record joins against the code on the GreenRev backend, then set `referral.claimUrl`: the game calls `GET <claimUrl>?code=ABC123` on launch and expects `{ "reward": 150000, "joins": 3 }` with any new, unpaid reward.
-- **Inside the mobile app:** pass the code from a deep link with `window.GREENREV_CONFIG.invite = "ref-ABC123"`, and set `playUrl` to the public game address so shared links open the game.
+### Featured-car events
 
-## GreenRev moments
+| Event | Example properties |
+| --- | --- |
+| `hype_car` | `car`, `dealer`, `points` |
+| `hype_card_open` | `car`, `reason` |
+| `hype_save` | `car` |
+| `cta_click` | `target`, `car`, `dealer`, `reason` |
 
-The game routes players to GreenRev at natural moments, not with pop-up ads:
+Listing links carry UTM context such as `hype_toast`, `arrival_hyped` and `dream_garage`.
 
-| Moment | Goes to |
-|---|---|
-| Breakdown, tyre burst, crash, VIO "not roadworthy", engine light on | **Mechanics**. Choosing the GreenRev mechanic also gets a 30% in-game discount. |
-| FRSC finds missing safety kit; Garage | **Parts vendors** |
-| Garage "See the real one on GreenRev"; city stops | **Marketplace**, searching for that model |
-| City stops; journey complete | **Dealer sign-up** ("Are you a dealer in Kano?") |
-| Tap a roadside **billboard** in the 3D world | The advertised service |
-| Menu strip | Marketplace and dealer sign-up |
+## Referrals and challenges
 
-One daily mission rewards visiting the Marketplace. Every click is tagged with a UTM reason (`breakdown`, `vio_fail`, `garage_real_car` …) so you can measure which moments convert.
+Players receive a six-character invite code. The menu can share a link through the phone share sheet, WhatsApp or copy action.
 
-## Roadside advertising (revenue)
+| Interaction | Documented behaviour |
+| --- | --- |
+| **Invite link** | A game URL ending with `#ref-CODE`. |
+| **Welcome reward** | A default ₦200,000 in game fuel money for an eligible new player joining through a friend's code; self-referrals do not count. |
+| **Journey challenge** | Share a completed journey and target time using a link such as `#ref-CODE-ch-lagos-abuja-t-754`. |
+| **Challenge reward** | A default ₦100,000 in game money for an eligible faster result. |
 
-Businesses can buy space on the in-game billboards. Some roadside boards, and a signpost at every rest stop, read **ADVERTISE HERE** with the prices. Tapping one (or **📣 Advertise** in the menu) opens the booking panel:
+Inviter rewards need backend validation. The host should record referral joins and configure `referral.claimUrl` for reward claims.
 
-| Package | Price (default) |
-|---|---|
+The claim request uses `GET ?code=ABC123` and expects a response shaped like:
+
+```json
+{
+  "reward": 150000,
+  "joins": 3
+}
+```
+
+Referral-related events include `referral_open`, `referral_join`, `invite_share` and `challenge_result`.
+
+For mobile deep links, configure:
+
+```javascript
+window.GREENREV_CONFIG = {
+  invite: "ref-ABC123",
+  playUrl: "https://example.com/roadtrip"
+};
+```
+
+Replace the example play URL with the public game address.
+
+## GreenRev service journeys
+
+| In-game moment | GreenRev destination |
+| --- | --- |
+| Breakdown, tyre burst, crash, failed VIO encounter or engine warning | Mechanics; the GreenRev mechanic option includes a 30% in-game discount. |
+| Missing safety kit or garage equipment need | Parts vendors. |
+| Garage vehicle discovery or a city stop | Marketplace, including a model search where configured. |
+| City stop or completed journey | Dealer registration/sign-up. |
+| Featured vehicle interaction | The configured dealer listing or Marketplace search. |
+| Tapped roadside advertisement | The advertiser's configured destination. |
+| Main menu links | Marketplace and dealer sign-up. |
+
+CTA links carry a reason such as `breakdown`, `vio_fail` or `garage_real_car` for funnel reporting. Configure the real GreenRev destination pages in `src/config.ts` before deployment.
+
+## Roadside advertising
+
+Businesses can book in-game roadside billboard placements. **ADVERTISE HERE** boards, rest-stop signs and the menu advertising action lead to the booking panel.
+
+### Default package examples
+
+| Duration | Configurable default price |
+| --- | --- |
 | 3 days | ₦15,000 |
 | 7 days | ₦30,000 |
 | 30 days | ₦100,000 |
 
-**Set up payments**
-1. In the Paystack dashboard, open **Payment Pages**, create one fixed-amount page per package, and copy each page's link.
-2. Paste the links (and your prices) into `advertise.packages` in `src/config.ts`, or pass them in from the app:
-   ```js
-   window.GREENREV_CONFIG = { advertise: {
-     contactUrl: "https://greenrevs.com/advertise",   // or https://wa.me/234XXXXXXXXXX
-     packages: [
-       { id: "3d", days: 3, price: 15000, paystackUrl: "https://paystack.com/pay/your-3-day-page" },
-       { id: "7d", days: 7, price: 30000, paystackUrl: "https://paystack.com/pay/your-7-day-page" },
-       { id: "30d", days: 30, price: 100000, paystackUrl: "https://paystack.com/pay/your-30-day-page" },
-     ] } };
-   ```
-   Until a package has a Paystack link, its button reads **Book now** and goes to `contactUrl`.
+These prices are configurable defaults. Set the commercial prices, booking terms and payment links before accepting bookings.
 
-**Artwork**
-- Size: 1024 × 512 px (2:1), JPG or PNG under 500 KB, with text kept 40 px from the edges.
-- Template: `public/ad-template.png`, linked from the panel. Regenerate it with `node scripts/make-ad-template.mjs`.
+### Booking configuration
 
-**Going live:** add the campaign to `public/ads.json`, or serve the same shape from the GreenRev backend and point `advertise.adsUrl` at it:
-```json
-{ "campaigns": [
-  { "id": "mama-cass-nov", "advertiser": "Mama Cass Kitchen", "image": "https://cdn.greenrevs.com/ads/mama-cass.jpg",
-    "link": "https://wa.me/2348000000000", "start": "2026-11-01", "end": "2026-11-07", "routes": ["lagos-abuja"] } ] }
+The booking setup uses one Paystack payment page per package. Add its actual link to `advertise.packages`, or supply the configuration through the host application:
+
+```javascript
+window.GREENREV_CONFIG = {
+  advertise: {
+    contactUrl: "https://example.com/advertise",
+    packages: [
+      {
+        id: "3d",
+        days: 3,
+        price: 15000,
+        paystackUrl: "https://paystack.com/pay/your-3-day-page"
+      },
+      {
+        id: "7d",
+        days: 7,
+        price: 30000,
+        paystackUrl: "https://paystack.com/pay/your-7-day-page"
+      },
+      {
+        id: "30d",
+        days: 30,
+        price: 100000,
+        paystackUrl: "https://paystack.com/pay/your-30-day-page"
+      }
+    ]
+  }
+};
 ```
-- `routes` is optional; leave it out for every journey.
-- Images must be served with CORS enabled (any normal CDN is fine).
-- Active campaigns rotate across the ADVERTISE HERE slots, with a small **Ad** tag.
-- Tapping an ad opens the advertiser's link.
 
-**Reporting:** the game emits these events, so you can send advertisers impressions and taps from your analytics:
-- `ad_impression {campaign}`
-- `ad_click {campaign}`
-- `advertise_open`
-- `advertise_package_click {package}`
+All example URLs must be replaced with working operator-controlled destinations. Without a package payment link, the button falls back to **Book now** and the configured contact destination.
 
-## Run it
+### Artwork
+
+- **Dimensions:** 1024 × 512 pixels, a 2:1 ratio.
+- **Format:** JPG or PNG.
+- **File size:** below 500 KB.
+- **Safe area:** keep text at least 40 pixels from the edges.
+- **Template:** `public/ad-template.png`.
+
+Regenerate the template with:
+
+```bash
+node scripts/make-ad-template.mjs
+```
+
+### Campaign configuration
+
+Add campaigns to `public/ads.json`, or configure `advertise.adsUrl` to serve the same structure:
+
+```json
+{
+  "campaigns": [
+    {
+      "id": "sample-food-campaign",
+      "advertiser": "Sample Advertiser",
+      "image": "https://example.com/ads/billboard.jpg",
+      "link": "https://example.com/advertiser",
+      "start": "2026-11-01",
+      "end": "2026-11-07",
+      "routes": ["lagos-abuja"]
+    }
+  ]
+}
+```
+
+The example is illustrative. Route targeting is optional; omitting `routes` makes a campaign eligible across journeys. Serve artwork from a host configured for the game's cross-origin image access.
+
+Active campaigns rotate through advertising slots with an **Ad** label. A tap opens the configured advertiser destination.
+
+### Advertising events
+
+| Event | Purpose |
+| --- | --- |
+| `ad_impression` | Campaign exposure, with campaign identifier. |
+| `ad_click` | Campaign tap/click, with campaign identifier. |
+| `advertise_open` | Advertising panel opened. |
+| `advertise_package_click` | A package was selected. |
+
+## Run locally
+
+Use the Node.js/npm version required by the repository's `package.json` and a browser with WebGL support. Run commands from the project folder containing `package.json`.
+
+Install dependencies:
 
 ```bash
 npm install
-npm run dev            # http://localhost:5173
-npm test               # unit tests: economy, contracts, events, routes, referrals, API
-npm run typecheck      # TypeScript
-npm run api            # Roadtrip API locally on :8787 (server/)
-npm run build:lib      # ES module + CSS for the Next.js app (dist-lib/)
-npm run build          # static site in dist/
-npm run smoke          # headless browser: boots the game, drives, checks the go-slow, hawker and checkpoint flows; fails on console errors
-node scripts/tour.mjs  # screenshots of every region into screenshots/
-node scripts/features-tour.mjs  # screenshots of each bridge, flyover, overpass and roundabout type
-node scripts/stops-tour.mjs  # rest stop, Advertise Here boards, a sponsored board and the booking panel
 ```
 
-Controls: **↑/W** gas · **↓/S/Space** brake · **←→/A D** steer · **H** horn (also hypes a passing luxury car) · **C** camera · **B** buy from a hawker · **F** refuel · **P/Esc** pause. On phones, on-screen buttons appear, plus the 🎥 camera button at the top.
+Start the game:
 
-## Embedding in the GreenRev apps
-
-The game is a static site: `npm run build`, then host `dist/` at e.g. `greenrevs.com/roadtrip`. For a mobile WebView, `npm run build:single` produces one self-contained `dist-single/index.html`.
-
-### Configure the links
-
-Set this before the game script loads:
-
-```html
-<script>
-  window.GREENREV_CONFIG = {
-    marketplaceUrl: "https://greenrevs.com",
-    mechanicUrl: "https://greenrevs.com/mechanics",
-    dealerSignupUrl: "https://greenrevs.com/dealers/signup",
-    partsUrl: "https://greenrevs.com/parts",
-    logoUrl: "https://www.greenrevs.com/logo.png",   // menu and HUD logo; the GREENREV wordmark shows if it can't load
-    featured: { url: "https://api.greenrevs.com/roadtrip/featured" },  // or the bundled ./featured.json
-    voiceUrl: "./voice/",                              // recorded voice clips
-    playUrl: "https://www.greenrevs.com/roadtrip",     // address used in invite and challenge links
-  };
-</script>
+```bash
+npm run dev
 ```
 
-The defaults in `src/config.ts` are placeholders. Point them at the real pages.
+Open the address printed by the development server. The default address is:
 
-### Messages to the host app
+[http://localhost:5173](http://localhost:5173)
 
-Inside a React Native WebView (`window.ReactNativeWebView`) or an iframe, the game **posts messages instead of opening URLs**, so the app can navigate natively:
+To run the separate Roadtrip API, open another terminal in the project folder:
 
-```js
-{ type: "greenrev:navigate", target: "mechanic", url: "https://…?utm_source=roadtrip_game…", context: { reason: "breakdown", city: "Ibadan" } }
-{ type: "greenrev:event", event: "leg_complete", props: { routeId, leg, seconds, crashes } }
+```bash
+npm run api
 ```
 
-These events are emitted for analytics and retention dashboards:
-- `session_start`
-- `daily_checkin`
-- `route_start`
-- `leg_complete`
-- `route_complete`
-- `cta_click`
+The local API port is **8787**. See [`server/README.md`](server/README.md) for backend setup and required configuration.
 
-`window.GreenRevAnalytics.track(event, props)` is called too, if present.
+## Build and validation commands
 
-### Saves
+| Command | Purpose |
+| --- | --- |
+| `npm test` | Unit tests for the economy, contracts, events, routes, referrals and API workflows. |
+| `npm run typecheck` | Run the TypeScript checks explicitly. |
+| `npm run build` | Build the static game site into `dist/`. |
+| `npm run build:lib` | Build the embeddable ES module and CSS into `dist-lib/`. |
+| `npm run build:single` | Build a self-contained `dist-single/index.html` for WebView packaging. |
+| `npm run smoke` | Headless browser workflow checks, including startup, driving and key roadside interactions. |
+| `node scripts/tour.mjs` | Capture regional screenshots into `screenshots/`. |
+| `node scripts/features-tour.mjs` | Capture bridge, flyover, overpass and roundabout examples. |
+| `node scripts/stops-tour.mjs` | Capture rest stops, advertising boards and the booking panel. |
 
-Progress is saved in `localStorage` (`greenrev-roadtrip-v2`). To sync across devices, back it with the user's GreenRev account through the host app.
+Run the relevant tests, type checks, production build and browser checks before deployment.
+
+## Embedding and host integration
+
+### Static hosting
+
+Build the site with:
+
+```bash
+npm run build
+```
+
+Host the generated `dist/` files at the intended public game address, such as a `/roadtrip` route on the GreenRev website.
+
+### Next.js and React
+
+The reusable entry point is:
+
+```typescript
+mountRoadtrip(element, config);
+```
+
+The `nextjs/` integration includes a client component, page and API route. Follow [`nextjs/README.md`](nextjs/README.md) for its actual imports and mounting instructions, and use `npm run build:lib` for the library output.
+
+### Mobile WebViews and iframes
+
+Build the single-file package with:
+
+```bash
+npm run build:single
+```
+
+The host app can handle navigation and analytics messages instead of opening external URLs directly.
+
+Example navigation message:
+
+```json
+{
+  "type": "greenrev:navigate",
+  "target": "mechanic",
+  "url": "https://example.com/mechanics?utm_source=roadtrip_game",
+  "context": {
+    "reason": "breakdown",
+    "city": "Ibadan"
+  }
+}
+```
+
+Example analytics message:
+
+```json
+{
+  "type": "greenrev:event",
+  "event": "leg_complete",
+  "props": {
+    "routeId": "lagos-abuja",
+    "leg": 1,
+    "seconds": 754,
+    "crashes": 0
+  }
+}
+```
+
+The bridge supports a React Native WebView through `window.ReactNativeWebView` and an iframe host. Use the host application's validated navigation and message handling.
+
+### Analytics
+
+Core events include:
+
+- `session_start`.
+- `daily_checkin`.
+- `route_start`.
+- `leg_complete`.
+- `route_complete`.
+- `cta_click`.
+
+When available, `window.GreenRevAnalytics.track(event, props)` also receives events.
+
+## Saving progress
+
+Local progress is saved in the browser under:
+
+```text
+greenrev-roadtrip-v2
+```
+
+Cross-device progress and GreenRev Points require the host application's GreenRev identity, persistence and cloud-save services. Connect these backend services to enable account-backed progress.
 
 ## Code map
 
-```
-src/
-  mount.ts           mountRoadtrip(element, config): embed anywhere (Next.js, React, plain page)
-  standalone.ts      entry for index.html
-  markup.ts          the game's HTML (canvas, HUD, menu, modal)
-  main.ts            game loop: driving model, potholes, collisions, events, dialogs, arrivals
-  config.ts          GreenRev links, host-app bridge, purchases, analytics
-  types/             shared types (routes, legs, modal actions) and globals
-  data/routes.ts     cities, journeys, legs (road quality, traffic, security, biome, tolls)
-  data/cars.ts       garage cars, upgrades, safety kit, driving physics
-  game/state.ts      save game, streaks, daily missions, achievements (pure, tested)
-  game/economy.ts    trip ledger, overdraft, bank loans, credit packs, difficulty (pure, tested)
-  game/contracts.ts  jobs, par times, contract settlement (pure, tested)
-  game/director.ts   seeded per-leg event plan, including the road challenges (pure, tested)
-  game/cloud.ts      cloud saves and GreenRev Points
-  game/ads.ts        roadside ad campaigns (tested)
-  game/featured.ts   featured dealer cars, hype, dream garage (tested)
-  game/referral.ts   invite codes and challenge links (tested)
-  game/audio.ts      engine, car horn, effects, car radio
-  game/voice.ts      spoken lines: recorded MP3s, optional text-to-speech
-  game/physics.ts    lanes, curves, hills, flyovers, river valleys, roundabouts, junction levelling
-  game/ui.ts         menu, modals, garage, passport, HUD helpers
-  world/world.ts     streamed road and terrain, embankments, scenery, sky, day/night, rain
-  world/traffic.ts   NPC vehicles: following, lane changes, herds, road works, one-way drivers
-  world/actors.ts    people and animals
-  world/features.ts  bridges, flyovers, overpasses and roundabouts
-  world/models.ts    procedural low-poly 3D models, including cones, toll plazas, flood water
-server/              Node.js API (Web Request/Response handlers, store interface, tests)
-nextjs/              drop-in files for the GreenRev Next.js app
-```
+| Path | Responsibility |
+| --- | --- |
+| `src/mount.ts` | Reusable `mountRoadtrip(element, config)` entry point. |
+| `src/standalone.ts` | Standalone entry for `index.html`. |
+| `src/markup.ts` | Game HTML, canvas, HUD, menu and modal markup. |
+| `src/main.ts` | Main driving loop, events, collisions, dialogue and arrivals. |
+| `src/config.ts` | Service links, host bridge, purchases, advertising and analytics configuration. |
+| `src/types/` | Shared route, leg, modal and global types. |
+| `src/data/routes.ts` | Cities, journeys, leg profiles, regional scenery and route settings. |
+| `src/data/cars.ts` | Garage vehicles, upgrades, safety kit and driving characteristics. |
+| `src/game/state.ts` | Saves, daily streaks, missions and achievements. |
+| `src/game/economy.ts` | Trip ledger, overdraft, fictional bank, credit packs and difficulty. |
+| `src/game/contracts.ts` | Jobs, target times and settlement. |
+| `src/game/director.ts` | Date-seeded road-event plans. |
+| `src/game/cloud.ts` | Cloud saves and GreenRev Points integration. |
+| `src/game/ads.ts` | Advertising campaign handling. |
+| `src/game/featured.ts` | Featured vehicles, hype and dream garage. |
+| `src/game/referral.ts` | Invite codes, referral claims and challenge links. |
+| `src/game/audio.ts` | Engine, horn, effects and radio. |
+| `src/game/voice.ts` | Recorded clips and optional text-to-speech. |
+| `src/game/physics.ts` | Lanes, curves, hills, elevated roads and junction alignment. |
+| `src/game/ui.ts` | Menus, modals, garage, passport and HUD helpers. |
+| `src/world/world.ts` | Streamed terrain, road, sky, scenery and weather. |
+| `src/world/traffic.ts` | NPC following, lane changes, herds and road-event traffic. |
+| `src/world/actors.ts` | People and animals. |
+| `src/world/features.ts` | Bridges, flyovers, overpasses and roundabouts. |
+| `src/world/models.ts` | Procedural low-poly models and road-event objects. |
+| `server/` | Node.js API handlers, storage interface and server tests. |
+| `nextjs/` | Next.js integration examples. |
+| `public/featured.json` | Featured vehicle configuration. |
+| `public/ads.json` | Advertising campaign configuration. |
+| `public/music/playlist.json` | Optional licensed-music playlist. |
+| `public/voice/` | Optional recorded dialogue clips and voice guidance. |
 
-TypeScript notes: the code compiles with `strict: false` for now, so the move from JavaScript stayed safe. New modules (economy, contracts, cloud, server) are typed properly; tighten `strict` file by file from here. Vite and esbuild don't type-check during builds, so run `npm run typecheck` in CI.
+## TypeScript notes
 
-Everything is procedural, so there are no image or model files (apart from the optional voice clips and the logo, which loads from greenrevs.com). The full build is about 170 KB gzipped, three.js included.
+The TypeScript v3 migration uses `strict: false` during the transition. Tighten type checking incrementally as modules are reviewed.
+
+Keep `npm run typecheck` as an explicit CI step rather than assuming that bundling also performs the required type checks. Confirm actual compiler settings in the repository before changing them.
+
+The visual style is procedural, low-poly WebGL, intended for mobile-friendly rendering. External artwork, optional audio, advertising images and the configured logo still need their corresponding files or hosted resources.
 
 ## Roadmap
 
-Planned for later releases: travel-together invite links (same car or convoy), in-trip voice chat and car radio, and a luxury and enthusiast car tier with customisation. See [docs/ROADMAP.md](docs/ROADMAP.md).
+Planned improvements include:
 
-## Notes
+- Travel-together invitation links for a shared car or convoy.
+- In-trip voice chat.
+- Additional luxury and enthusiast vehicles.
+- Further vehicle customisation.
 
-- This is a full rebuild. The previous version's code (`game.js`, `world3d.js`, `server.js` …) was never committed to this repository, only its README, so its features were reimplemented from that description.
-- The earlier **Paystack test checkout** for in-game money was intentionally not carried over. In-game naira are virtual. Selling game currency needs a server-side wallet, refunds and provider approval, and is better handled by the GreenRev backend if you decide to do it.
-- The visuals are stylised low-poly WebGL, built to run on mid-range Android phones. "4D" here means 3D plus time: day-night, weather and events that change every day.
-#   G r e e n r e v - G a m e s  
- 
+See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the repository's maintained roadmap.
+
+## Integration reference
+
+- [Next.js integration](nextjs/README.md)
+- [Node.js backend setup](server/README.md)
+- [Voice recording guidance](public/voice/README.md)
+- [Project roadmap](docs/ROADMAP.md)
+- [Game configuration](src/config.ts)
+- [Journey definitions](src/data/routes.ts)
+
+This README describes the TypeScript v3 layout. Earlier standalone JavaScript builds used different file layouts; use the current module map and integration documentation when merging the game into the GreenRev applications.
